@@ -1,0 +1,16 @@
+.holidays-page .second-hero-section {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.50), rgba(0, 0, 0, 0.50)), url(../../Assets/Images/p10.jpg);
+}
+
+.holidays-page .need-inspiration-section {
+    background-image: url(../../Assets/Images/p17.jpg);
+}
+
+.holidays-page .holiday-plan-section {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0.75)), url(../../Assets/Images/p18.jpg);
+    background-position: center;
+}
+
+.holidays-page .recommended-section .container {
+    background-image: url(../../Assets/Images/p7.jpg);
+}

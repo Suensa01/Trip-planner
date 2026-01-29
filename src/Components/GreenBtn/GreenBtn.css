@@ -1,0 +1,10 @@
+#green-btn {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 50px;
+}
+
+#green-btn:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}

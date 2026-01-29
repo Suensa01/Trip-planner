@@ -1,0 +1,31 @@
+.navbar {
+    background-color: transparent;
+    border-bottom: 2px solid rgba(255, 254, 254, 0.545);
+}
+
+ .navbar-toggler {
+    border-color: rgba(80, 75, 75, 0.37);
+    border-radius: 50px;
+}
+.navbar .btn{
+    border-radius: 50px;
+    background-color: #04b3ef;
+    border-color:rgba(80, 75, 75, 0.37);
+
+}
+
+.navbar .navbar-toggler-icon,
+.navbar .navbar-brand img {
+    filter: invert();
+}
+
+.navbar .navbar-brand img {
+    transform: rotate(45deg);
+    width: 1.5rem;
+}
+
+@media screen and (max-width: 576px) {
+    .navbar {
+        background-color: transparent;
+    }
+}
