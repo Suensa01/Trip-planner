@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Destinations.css';
 import SecondHeroSection from '../../Components/SecondHeroSection/SecondHeroSection';
 import EuropeDestinationsSection from '../../Components/DestinationsSection/EuropeDestinationsSection';
@@ -7,19 +7,28 @@ import AsiaDestinationsSection from '../../Components/DestinationsSection/AsiaDe
 import NeedInspirationsSection from '../../Components/NeedInspiration/NeedInspirationSection';
 import AfricaDestinationsSection from '../../Components/DestinationsSection/AfricaDestinationsSection';
 import RecommendedSection from '../../Components/RecommendedSection/RecommendedSection';
+import PackageDetailModal from '../../Components/PackageDetailModal/PackageDetailModal';
 
 function Destinations() {
+  const [selectedPackage, setSelectedPackage] = useState(null);
+
   return (
     <div className='destinations-page'>
-      <SecondHeroSection secondHeroTitle=' CONTINENTAL ' />
-      <EuropeDestinationsSection />
+      <SecondHeroSection secondHeroTitle='CONTINENTAL DESTINATIONS' />
+      <EuropeDestinationsSection onSelectPackage={setSelectedPackage} />
       <HolidayPlanSection itemHolidayPlanTitle='Find your perfect summer holiday' />
-      <AsiaDestinationsSection />
+      <AsiaDestinationsSection onSelectPackage={setSelectedPackage} />
       <NeedInspirationsSection />
-      <AfricaDestinationsSection />
+      <AfricaDestinationsSection onSelectPackage={setSelectedPackage} />
       <div className='mt-4 mt-sm-5'>
-        <RecommendedSection itemRecommendedTitle='Your dream holiday' />
+        <RecommendedSection itemRecommendedTitle='Your dream holiday' onSelectPackage={setSelectedPackage} />
       </div>
+
+      <PackageDetailModal 
+        show={!!selectedPackage} 
+        onHide={() => setSelectedPackage(null)} 
+        packageData={selectedPackage} 
+      />
     </div>
   )
 }

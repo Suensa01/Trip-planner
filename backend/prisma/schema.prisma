@@ -1,0 +1,93 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         String     @default("TRAVELER") // "ADMIN" or "TRAVELER"
+  avatar       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  trips        Trip[]
+  wishlists    Wishlist[]
+  auditLogs    AuditLog[]
+}
+
+model Trip {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  destination String
+  coverImage  String?
+  budgetLimit Float      @default(2500)
+  startDate   String?
+  endDate     String?
+  createdAt   DateTime   @default(now())
+  activities  Activity[]
+  expenses    Expense[]
+  documents   Document[]
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  dayNumber Int
+  title     String
+  type      String   @default("activity")
+  time      String
+  location  String
+  price     Float    @default(0)
+  notes     String?
+  lat       Float?
+  lng       Float?
+}
+
+model Expense {
+  id       String @id @default(uuid())
+  tripId   String
+  trip     Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  title    String
+  amount   Float
+  payer    String
+  category String
+  date     String
+}
+
+model Document {
+  id       String @id @default(uuid())
+  tripId   String
+  trip     Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name     String
+  type     String
+  size     String
+  category String
+  code     String
+}
+
+model Wishlist {
+  id              String  @id @default(uuid())
+  userId          String
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemTitle       String
+  itemPrice       String?
+  itemImage       String?
+  itemDescription String?
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  createdAt DateTime @default(now())
+}

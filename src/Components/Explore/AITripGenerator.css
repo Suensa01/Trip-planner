@@ -1,0 +1,8 @@
+.bg-gradient-coral {
+  background: linear-gradient(135deg, #ff385c 0%, #e0284d 100%);
+}
+
+.ai-generator-card {
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08) !important;
+  border-radius: 24px !important;
+}

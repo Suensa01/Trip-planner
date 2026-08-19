@@ -4,14 +4,24 @@ import Container from 'react-bootstrap/Container';
 import ParisCityBreaksItems from '../../Assets/ParisCityBreaksItems';
 import CityBreakCard from './CityBreakCard';
 
-function ParisCityBreaksSection() {
+function ParisCityBreaksSection({ onSelectPackage }) {
   return (
     <div className='city-break-section my-4 my-sm-5'>
         <Container>
-            <h3 className='mb-4 mb-sm-5 text-start text-uppercase fw-semibold'>Mumbai city breaks</h3>
+            <h3 className='mb-4 mb-sm-5 text-start text-uppercase fw-semibold'>Paris City Breaks</h3>
             <div className='row g-4'>
                 {
-                    ParisCityBreaksItems.map((item) => <CityBreakCard key={item.id} itemImage={item.itemImage} itemTitle={item.itemTitle} itemSubTitle={item.itemSubTitle} itemNights={item.itemNights} itemPrice={item.itemPrice} />)
+                    ParisCityBreaksItems.map((item) => (
+                      <CityBreakCard 
+                        key={item.id} 
+                        itemImage={item.itemImage} 
+                        itemTitle={item.itemTitle} 
+                        itemSubTitle={item.itemSubTitle} 
+                        itemNights={item.itemNights} 
+                        itemPrice={item.itemPrice} 
+                        onSelectPackage={onSelectPackage}
+                      />
+                    ))
                 }
             </div>
         </Container>
