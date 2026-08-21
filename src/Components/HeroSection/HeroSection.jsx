@@ -1,49 +1,23 @@
 import React from 'react';
 import './HeroSection.css';
-import Carousel from 'react-bootstrap/Carousel';
-import GreenBtn from '../GreenBtn/GreenBtn';
+import Container from 'react-bootstrap/Container';
+import Button from 'react-bootstrap/Button';
+import { Link } from 'react-router-dom';
 
 function HeroSection() {
   return (
-    <div className='hero-section'>
-        <Carousel>
-            <Carousel.Item className='carousel-item1 vh-100 '>
-                <Carousel.Caption className='h-100 d-flex flex-column align-items-center justify-content-top'>
-                    <div className="row h-100">
-                        <div className='col-lg-6 d-flex flex-column align-items-start justify-content-center'>
-                            <h1 className='text-capitalize text-start'>Find your perfect holiday</h1>
-                            <p className='text-start'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit molestiae blanditiis assumenda laboriosam id error minus esse odio cumque quod!</p>
-                            <GreenBtn btnTitle='Check our holidays' btnLink='/holidays' />
-                        </div>
-                        <div className='col-lg-6 d-none d-lg-block'></div>
-                    </div>
-                </Carousel.Caption>
-            </Carousel.Item>
-            <Carousel.Item className='carousel-item2 vh-100'>
-                <Carousel.Caption className='h-100'>
-                    <div className="row h-100">
-                        <div className='col-lg-6 d-flex flex-column align-items-start justify-content-center'>
-                            <h1 className='text-capitalize text-start'>Do you need a city break?</h1>
-                            <p className='text-start'>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Suscipit totam nam consectetur vel praesentium eligendi?</p>
-                            <GreenBtn btnTitle='Our city breaks' btnLink='/city-breaks' />
-                        </div>
-                        <div className='col-lg-6 d-none d-lg-block'></div>
-                    </div>
-                </Carousel.Caption>
-            </Carousel.Item>
-            <Carousel.Item className='carousel-item3 vh-100'>
-                <Carousel.Caption className='h-100'>
-                    <div className="row h-100">
-                        <div className='col-lg-6 d-none d-lg-block'></div>
-                        <div className='col-lg-6 d-flex flex-column align-items-end justify-content-center'>
-                            <h1 className='text-capitalize text-start'>Travel anywhere</h1>
-                            <p className='text-start'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit molestiae blanditiis assumenda laboriosam id error minus esse odio cumque quod!</p>
-                            <GreenBtn btnTitle='Check all destinations' btnLink='/destinations' />
-                        </div>
-                    </div>
-                </Carousel.Caption>
-            </Carousel.Item>
-        </Carousel>
+    <div className='trippoo-hero-section'>
+        <Container className="text-center position-relative z-2">
+            <h1 className='trippoo-hero-title mb-3'>
+              Your Journey Starts<br />Before You Go
+            </h1>
+            <p className='trippoo-hero-subtitle mb-4'>
+              Inspiration, Planning, And Booking — All In One Travel Experience.
+            </p>
+            <Button variant="light" className="btn-pill-light px-5 py-3 fs-6 shadow">
+                <Link to="/holidays" className="text-decoration-none text-dark">View Package</Link>
+            </Button>
+        </Container>
     </div>
   )
 }

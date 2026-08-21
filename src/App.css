@@ -1,57 +1,118 @@
- 
- :root {
-  --primary-color:#04b3ef;
-  --secondary-color: #1dd3e7;
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
-  --primary-bg-color: rgba(136, 218, 247, 0.8);
-  --secondary-bg-color: rgba(121, 166, 244, 0.9);
+:root {
+  --brand-coral: #ff385c;
+  --brand-coral-hover: #e0284d;
+  --brand-dark: #0f172a;
+  --brand-muted: #64748b;
+  --brand-bg: #f8fafc;
+  --brand-border: #e2e8f0;
+  --brand-radius: 20px;
+  --brand-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-.App {
-  text-align: center;
+body {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  background-color: var(--brand-bg);
+  color: var(--brand-dark);
+  -webkit-font-smoothing: antialiased;
 }
 
-.App h1 {
-  font-size: 4.5rem;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  color: var(--brand-dark);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.App h2 {
-  font-size: 3.5rem;
+/* Custom Coral Button Utility */
+.btn-coral {
+  background-color: var(--brand-coral) !important;
+  border-color: var(--brand-coral) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  border-radius: 50px;
+  transition: all 0.25 ease;
+  box-shadow: 0 4px 14px rgba(255, 56, 92, 0.35);
 }
 
-.App h3 {
-  font-size: 2.5rem;
+.btn-coral:hover {
+  background-color: var(--brand-coral-hover) !important;
+  border-color: var(--brand-coral-hover) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 56, 92, 0.45);
 }
 
-.text-green {
-  color: var(--primary-color);
+.btn-pill-light {
+  background-color: #ffffff !important;
+  color: var(--brand-dark) !important;
+  font-weight: 700;
+  border-radius: 50px;
+  border: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
 }
 
-.img-hover,
-.img-hover:hover {
-  transition: all 0.5s ease;
+.btn-pill-light:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
-.img-hover:hover {
-  transform: scale(1.03);
+.card-trippoo {
+  border-radius: var(--brand-radius) !important;
+  border: none !important;
+  box-shadow: var(--brand-shadow) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-@media screen and (max-width: 768px) {
-  .App h2 {
-    font-size: 2.5rem;
-  }
+.card-trippoo:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
 }
 
-@media screen and (max-width: 576px) {
-  .App h1 {
-    font-size: 3rem;
-  }
+/* Rounded Filter Pills */
+.pill-filter-btn {
+  border-radius: 50px !important;
+  padding: 8px 24px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
 
-  .App h2 {
-    font-size: 2rem;
-  }
+.pill-filter-btn.active {
+  background-color: var(--brand-coral) !important;
+  border-color: var(--brand-coral) !important;
+  color: #ffffff !important;
+}
 
-  .App h3 {
-    font-size: 1.75rem;
-  }
+.pill-filter-btn:not(.active) {
+  background-color: #ffffff !important;
+  border: 1px solid var(--brand-border) !important;
+  color: var(--brand-muted) !important;
+}
+
+.pill-filter-btn:not(.active):hover {
+  border-color: var(--brand-coral) !important;
+  color: var(--brand-coral) !important;
+}
+
+/* Arrow Navigation Buttons */
+.nav-arrow-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--brand-border);
+  background: #ffffff;
+  color: var(--brand-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-arrow-btn:hover {
+  border-color: var(--brand-coral);
+  color: var(--brand-coral);
+  transform: scale(1.08);
 }

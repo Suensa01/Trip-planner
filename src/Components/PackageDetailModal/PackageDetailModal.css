@@ -1,0 +1,19 @@
+.package-detail-modal .modal-pkg-img {
+  max-height: 240px;
+  object-fit: cover;
+}
+
+.wishlist-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.wishlist-btn:hover {
+  transform: scale(1.1);
+}

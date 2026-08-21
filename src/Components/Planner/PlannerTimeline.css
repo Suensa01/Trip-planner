@@ -1,0 +1,38 @@
+.timeline-items-container {
+  border-left: 2px solid #e2e8f0;
+  position: relative;
+}
+
+.timeline-item {
+  position: relative;
+}
+
+.timeline-node {
+  position: absolute;
+  left: -28px;
+  top: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #28a745;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 5;
+}
+
+.timeline-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.timeline-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
+}
+
+.transit-indicator {
+  font-style: italic;
+  margin-left: 28px !important;
+}

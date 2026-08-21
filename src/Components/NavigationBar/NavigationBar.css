@@ -1,31 +1,80 @@
-.navbar {
-    background-color: transparent;
-    border-bottom: 2px solid rgba(255, 254, 254, 0.545);
+.trippoo-navbar {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  padding-top: 18px;
+  padding-bottom: 18px;
+  transition: all 0.3s ease;
 }
 
- .navbar-toggler {
-    border-color: rgba(80, 75, 75, 0.37);
-    border-radius: 50px;
-}
-.navbar .btn{
-    border-radius: 50px;
-    background-color: #04b3ef;
-    border-color:rgba(80, 75, 75, 0.37);
-
+.trippoo-brand {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.85rem;
+  letter-spacing: -0.03em;
+  color: #0f172a !important;
 }
 
-.navbar .navbar-toggler-icon,
-.navbar .navbar-brand img {
-    filter: invert();
+.trippoo-brand .brand-dot {
+  color: var(--brand-coral);
+  font-weight: 900;
 }
 
-.navbar .navbar-brand img {
-    transform: rotate(45deg);
-    width: 1.5rem;
+.trippoo-navbar .nav-link {
+  color: #0f172a !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-@media screen and (max-width: 576px) {
-    .navbar {
-        background-color: transparent;
-    }
+.trippoo-navbar .nav-link:hover, 
+.trippoo-navbar .nav-link.active {
+  color: var(--brand-coral) !important;
+}
+
+/* Outlined Book Now Pill Button with pure transparent background */
+.btn-nav-outline {
+  border: 1.5px solid #0f172a !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  font-weight: 700;
+  border-radius: 50px;
+  padding: 8px 24px;
+  transition: all 0.25s ease;
+}
+
+.btn-nav-outline:hover {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+.btn-nav-outline a {
+  color: inherit !important;
+}
+
+/* Outlined Profile Circle Button with pure transparent background */
+.profile-circle-btn-light {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid #0f172a;
+  background: transparent;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.25s ease;
+}
+
+.profile-circle-btn-light:hover {
+  background: #0f172a;
+  color: #ffffff;
+  transform: scale(1.05);
 }

@@ -1,0 +1,22 @@
+.planner-page {
+  padding-top: 90px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.planner-hero-header {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.planner-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%);
+}
