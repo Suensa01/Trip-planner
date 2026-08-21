@@ -7,55 +7,17 @@ const router = express.Router();
 // GET /api/trips - Fetch active trip or all trips for current user
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    let trip = await prisma.trip.findFirst({
+    const trip = await prisma.trip.findFirst({
       where: { userId: req.user.id },
       include: {
         activities: { orderBy: { dayNumber: 'asc' } },
         expenses: true,
         documents: true
-      }
+      },
+      orderBy: { createdAt: 'desc' }
     });
 
-    // If user has no trip yet, create initial default trip for user
-    if (!trip) {
-      trip = await prisma.trip.create({
-        data: {
-          userId: req.user.id,
-          title: 'Summer Adventure in Rome & Amalfi',
-          destination: 'Rome, Italy',
-          coverImage: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
-          budgetLimit: 2500,
-          startDate: '2026-09-10',
-          endDate: '2026-09-15',
-          activities: {
-            create: [
-              { dayNumber: 1, title: 'Flight Arrival at Fiumicino Airport', type: 'flight', time: '10:00 AM', location: 'FCO Airport', price: 320, notes: 'Terminal 3' },
-              { dayNumber: 1, title: 'Check-in at Hotel Artemide', type: 'hotel', time: '01:30 PM', location: 'Via Nazionale 22, Rome', price: 180, notes: 'Confirmation #QT-9982' },
-              { dayNumber: 2, title: 'Colosseum Guided Tour', type: 'activity', time: '09:30 AM', location: 'Piazza del Colosseo', price: 65, notes: 'Skip line tickets' }
-            ]
-          },
-          expenses: {
-            create: [
-              { title: 'Hotel Artemide (3 Nights)', amount: 540, payer: req.user.name, category: 'Lodging', date: '2026-09-10' },
-              { title: 'Roundtrip Flights', amount: 960, payer: req.user.name, category: 'Transport', date: '2026-09-10' }
-            ]
-          },
-          documents: {
-            create: [
-              { name: 'Flight_Confirmation_FCO.pdf', type: 'pdf', size: '1.2 MB', category: 'Flights', code: 'QT-AIR-8821' },
-              { name: 'Hotel_Artemide_Voucher.pdf', type: 'pdf', size: '850 KB', category: 'Hotels', code: 'BOOK-HTL-9021' }
-            ]
-          }
-        },
-        include: {
-          activities: true,
-          expenses: true,
-          documents: true
-        }
-      });
-    }
-
-    res.json({ trip });
+    res.json({ trip: trip || null });
   } catch (err) {
     console.error('Fetch Trips Error:', err);
     res.status(500).json({ error: 'Failed to fetch trip data.' });
