@@ -4,6 +4,25 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// GET /api/expenses - Fetch expenses for current user's active trip
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const { tripId } = req.query;
+    if (!tripId) {
+      return res.json({ expenses: [] });
+    }
+
+    const expenses = await prisma.expense.findMany({
+      where: { tripId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({ expenses });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch expenses.' });
+  }
+});
+
 // POST /api/expenses - Record new expense
 router.post('/', authenticateToken, async (req, res) => {
   try {
@@ -27,6 +46,17 @@ router.post('/', authenticateToken, async (req, res) => {
     res.status(201).json({ expense });
   } catch (err) {
     res.status(500).json({ error: 'Failed to record expense.' });
+  }
+});
+
+// DELETE /api/expenses/:id - Delete an expense
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.expense.delete({ where: { id } });
+    res.json({ message: 'Expense deleted.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete expense.' });
   }
 });
 
