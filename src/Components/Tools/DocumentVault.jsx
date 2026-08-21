@@ -15,8 +15,15 @@ function DocumentVault() {
   const [code, setCode] = useState('');
   const [previewDoc, setPreviewDoc] = useState(null);
 
+  const documents = activeTrip?.documents || [];
+
   const handleUpload = (e) => {
     e.preventDefault();
+    if (!activeTrip) {
+      showToast('No Active Trip', 'Please create or select an active trip first.', 'warning', 'bi-exclamation-circle');
+      return;
+    }
+
     if (docName) {
       const formattedName = docName.endsWith('.pdf') || docName.endsWith('.png') ? docName : `${docName}.pdf`;
       const docCode = code || `QT-DOC-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -37,7 +44,7 @@ function DocumentVault() {
     <Card className="shadow-sm border-0 rounded-4 text-start">
       <Card.Header className="bg-dark text-white p-3 d-flex justify-content-between align-items-center">
         <h5 className="fw-bold mb-0">📂 Centralized Document & Ticket Vault</h5>
-        <Badge bg="info" className="px-3 py-2">{activeTrip.documents?.length || 0} Files Stored</Badge>
+        <Badge bg="info" className="px-3 py-2">{documents.length} Files Stored</Badge>
       </Card.Header>
       <Card.Body className="p-4">
         <div className="row g-4">
@@ -87,30 +94,38 @@ function DocumentVault() {
           {/* Stored Documents Grid */}
           <div className="col-md-8">
             <h6 className="fw-bold text-dark mb-3">Stored Travel Credentials & Tickets</h6>
-            <div className="row g-3">
-              {activeTrip.documents?.map((doc) => (
-                <div key={doc.id} className="col-md-6">
-                  <Card className="border shadow-sm rounded-3 p-3">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="fs-1 text-danger">📄</div>
-                      <div className="flex-fill overflow-hidden">
-                        <Badge bg="secondary" className="mb-1">{doc.category}</Badge>
-                        <h6 className="fw-bold text-dark text-truncate mb-0">{doc.name}</h6>
-                        <small className="text-muted d-block">Code: <strong>{doc.code}</strong> • {doc.size}</small>
+
+            {documents.length === 0 ? (
+              <div className="text-center py-5 bg-light rounded-3 text-muted">
+                <i className="bi bi-folder-symlink fs-2 opacity-50 d-block mb-2"></i>
+                <span>No travel documents or vouchers uploaded yet. Use the form to upload flight, hotel, or tour tickets!</span>
+              </div>
+            ) : (
+              <div className="row g-3">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="col-md-6">
+                    <Card className="border shadow-sm rounded-3 p-3">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="fs-1 text-danger">📄</div>
+                        <div className="flex-fill overflow-hidden">
+                          <Badge bg="secondary" className="mb-1">{doc.category}</Badge>
+                          <h6 className="fw-bold text-dark text-truncate mb-0">{doc.name}</h6>
+                          <small className="text-muted d-block">Code: <strong>{doc.code}</strong> • {doc.size}</small>
+                        </div>
                       </div>
-                    </div>
-                    <Button 
-                      variant="outline-dark" 
-                      size="sm" 
-                      className="w-100 mt-3 fw-bold"
-                      onClick={() => setPreviewDoc(doc)}
-                    >
-                      👁️ View Document & QR
-                    </Button>
-                  </Card>
-                </div>
-              ))}
-            </div>
+                      <Button 
+                        variant="outline-dark" 
+                        size="sm" 
+                        className="w-100 mt-3 fw-bold"
+                        onClick={() => setPreviewDoc(doc)}
+                      >
+                        👁️ View Document & QR
+                      </Button>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Card.Body>

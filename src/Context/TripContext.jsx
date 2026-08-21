@@ -1,101 +1,248 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
+import { useAuth } from './AuthContext';
 
 const TripContext = createContext();
 
-const initialTrip = {
-  id: 'trip-101',
-  title: 'Summer Adventure in Rome & Amalfi',
-  destination: 'Rome, Italy',
-  coverImage: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
-  startDate: '2026-09-10',
-  endDate: '2026-09-15',
-  travelers: ['You (Alex)', 'Sarah M.', 'David K.'],
-  budgetLimit: 2500,
-  collaborators: [
-    { name: 'Sarah M.', email: 'sarah@example.com', role: 'Editor', status: 'Active' },
-    { name: 'David K.', email: 'david@example.com', role: 'Viewer', status: 'Pending' }
-  ],
-  comments: [
-    { id: 1, author: 'Sarah M.', text: 'Should we book the Colosseum skip-the-line tickets in advance?', time: '2 hours ago' },
-    { id: 2, author: 'You (Alex)', text: 'Yes! I added it to Day 2 morning itinerary.', time: '1 hour ago' }
-  ],
-  days: [
-    {
-      dayNumber: 1,
-      date: '2026-09-10',
-      title: 'Arrival & Historic Center Stroll',
-      activities: [
-        { id: 'act-1', title: 'Flight Arrival at Fiumicino Airport', type: 'flight', time: '10:00 AM', location: 'FCO Airport', price: 320, lat: 41.799, lng: 12.246, notes: 'Terminal 3 baggage claim' },
-        { id: 'act-2', title: 'Check-in at Hotel Artemide', type: 'hotel', time: '01:30 PM', location: 'Via Nazionale 22, Rome', price: 180, lat: 41.901, lng: 12.493, notes: 'Confirmation #QT-9982' },
-        { id: 'act-3', title: 'Trevi Fountain & Gelato Walk', type: 'activity', time: '05:00 PM', location: 'Piazza di Trevi', price: 15, lat: 41.900, lng: 12.483, notes: 'Try Pistachio at San Crispino' }
-      ]
-    },
-    {
-      dayNumber: 2,
-      date: '2026-09-11',
-      title: 'Colosseum & Ancient Rome Wonders',
-      activities: [
-        { id: 'act-4', title: 'Colosseum & Roman Forum Guided Tour', type: 'activity', time: '09:30 AM', location: 'Piazza del Colosseo', price: 65, lat: 41.890, lng: 12.492, notes: 'Skip the line priority entrance' },
-        { id: 'act-5', title: 'Trattoria Lunch at Da Enzo', type: 'food', time: '01:00 PM', location: 'Trastevere, Rome', price: 35, lat: 41.888, lng: 12.476, notes: 'Famous for Cacio e Pepe' },
-        { id: 'act-6', title: 'Pantheon Sunset Visit', type: 'activity', time: '06:00 PM', location: 'Piazza della Rotonda', price: 10, lat: 41.898, lng: 12.476, notes: 'Free entry after 6 PM' }
-      ]
-    },
-    {
-      dayNumber: 3,
-      date: '2026-09-12',
-      title: 'Vatican Museums & St. Peters Basilica',
-      activities: [
-        { id: 'act-7', title: 'Sistine Chapel & Vatican Museums', type: 'activity', time: '09:00 AM', location: 'Vatican City', price: 75, lat: 41.906, lng: 12.453, notes: 'Dress code strictly enforced' },
-        { id: 'act-8', title: 'St. Peters Square & Dome Climb', type: 'activity', time: '02:00 PM', location: 'Piazza San Pietro', price: 12, lat: 41.902, lng: 12.457, notes: '551 steps to top view' }
-      ]
-    }
-  ],
-  expenses: [
-    { id: 101, title: 'Hotel Artemide (3 Nights)', amount: 540, payer: 'You (Alex)', category: 'Lodging', date: '2026-09-10' },
-    { id: 102, title: 'Roundtrip Flights Rome', amount: 960, payer: 'You (Alex)', category: 'Transport', date: '2026-09-10' },
-    { id: 103, title: 'Vatican VIP Tour Pass', amount: 225, payer: 'Sarah M.', category: 'Activities', date: '2026-09-11' },
-    { id: 104, title: 'Trastevere Dinner & Drinks', amount: 140, payer: 'David K.', category: 'Food', date: '2026-09-11' }
-  ],
-  documents: [
-    { id: 'doc-1', name: 'Flight_Confirmation_FCO.pdf', type: 'pdf', size: '1.2 MB', category: 'Flights', code: 'QT-AIR-8821' },
-    { id: 'doc-2', name: 'Hotel_Artemide_Voucher.pdf', type: 'pdf', size: '850 KB', category: 'Hotels', code: 'BOOK-HTL-9021' },
-    { id: 'doc-3', name: 'Colosseum_Tour_Pass.png', type: 'image', size: '2.1 MB', category: 'Tickets', code: 'QR-COL-3312' }
-  ],
-  packingList: [
-    { id: 'p-1', text: 'Passport & Driver License', category: 'Documents', completed: true },
-    { id: 'p-2', text: 'European Power Plug Adapter', category: 'Electronics', completed: true },
-    { id: 'p-3', text: 'Comfortable Walking Shoes', category: 'Clothing', completed: false },
-    { id: 'p-4', text: 'Sunscreen & Sunglasses', category: 'Essentials', completed: false },
-    { id: 'p-5', text: 'Travel Insurance Documents', category: 'Documents', completed: true },
-    { id: 'p-6', text: 'Prescription Medicines', category: 'Health', completed: false }
-  ]
+const calculateDayDate = (startDateStr, dayNumber) => {
+  if (!startDateStr) return `Day ${dayNumber}`;
+  const start = new Date(startDateStr);
+  if (isNaN(start.getTime())) return `Day ${dayNumber}`;
+  start.setDate(start.getDate() + (dayNumber - 1));
+  return start.toISOString().split('T')[0];
 };
 
 export const TripProvider = ({ children }) => {
-  const [activeTrip, setActiveTrip] = useState(() => {
-    const saved = localStorage.getItem('quest_active_trip');
-    return saved ? JSON.parse(saved) : initialTrip;
-  });
+  const { user } = useAuth();
+  const [activeTrip, setActiveTrip] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Sync active trip with Supabase API whenever logged-in user changes
+  useEffect(() => {
+    if (!user) {
+      setActiveTrip(null);
+      localStorage.removeItem('quest_active_trip');
+      return;
+    }
+
+    setLoading(true);
+    api.getTrips()
+      .then((res) => {
+        if (res.trip) {
+          const formattedTrip = formatTripFromApi(res.trip);
+          setActiveTrip(formattedTrip);
+          localStorage.setItem('quest_active_trip', JSON.stringify(formattedTrip));
+        } else {
+          setActiveTrip(null);
+          localStorage.removeItem('quest_active_trip');
+        }
+      })
+      .catch((err) => {
+        console.warn('API trip fetch failed, checking local storage:', err);
+        const saved = localStorage.getItem('quest_active_trip');
+        if (saved) {
+          setActiveTrip(JSON.parse(saved));
+        } else {
+          setActiveTrip(null);
+        }
+      })
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const formatTripFromApi = (tripData) => {
+    const startDate = tripData.startDate || '';
+    const endDate = tripData.endDate || '';
+    const budgetLimit = Number(tripData.budgetLimit) || 0;
+
+    // Group activities by dayNumber
+    const daysMap = {};
+    if (tripData.activities && Array.isArray(tripData.activities)) {
+      tripData.activities.forEach((act) => {
+        const dNum = act.dayNumber || 1;
+        if (!daysMap[dNum]) {
+          daysMap[dNum] = {
+            dayNumber: dNum,
+            date: calculateDayDate(startDate, dNum),
+            title: `Day ${dNum} Plan`,
+            activities: []
+          };
+        }
+        daysMap[dNum].activities.push({
+          id: act.id,
+          title: act.title,
+          type: act.type || 'activity',
+          time: act.time || '10:00 AM',
+          location: act.location || tripData.destination,
+          price: Number(act.price) || 0,
+          notes: act.notes || '',
+          lat: act.lat || 41.89,
+          lng: act.lng || 12.48
+        });
+      });
+    }
+
+    const days = Object.values(daysMap).sort((a, b) => a.dayNumber - b.dayNumber);
+
+    return {
+      id: tripData.id,
+      title: tripData.title,
+      destination: tripData.destination,
+      coverImage: tripData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80',
+      startDate: startDate || 'Flexible Dates',
+      endDate: endDate || 'Flexible Dates',
+      budgetLimit: budgetLimit,
+      days: days.length ? days : [
+        { dayNumber: 1, date: calculateDayDate(startDate, 1), title: 'Day 1 Arrival & Discovery', activities: [] }
+      ],
+      expenses: tripData.expenses || [],
+      documents: tripData.documents || [],
+      comments: [
+        { id: 1, author: user?.name || 'You', text: `Created trip: ${tripData.title}`, time: 'Just now' }
+      ],
+      packingList: [
+        { id: 'p-1', text: 'Passport & Travel IDs', category: 'Documents', completed: true },
+        { id: 'p-2', text: 'Power Bank & Charger', category: 'Electronics', completed: false },
+        { id: 'p-3', text: 'Comfortable Shoes', category: 'Clothing', completed: false }
+      ]
+    };
+  };
 
   const updateTripState = (updated) => {
     setActiveTrip(updated);
     localStorage.setItem('quest_active_trip', JSON.stringify(updated));
   };
 
-  const addActivity = (dayNumber, newActivity) => {
+  const createCustomTrip = async (tripDetails) => {
+    setLoading(true);
+    try {
+      const payload = {
+        title: tripDetails.title,
+        destination: tripDetails.destination,
+        startDate: tripDetails.startDate,
+        endDate: tripDetails.endDate,
+        budgetLimit: Number(tripDetails.budgetLimit) || 0,
+        coverImage: tripDetails.coverImage
+      };
+
+      const res = await api.createTrip(payload);
+      if (res.trip) {
+        const newFormatted = formatTripFromApi(res.trip);
+        setActiveTrip(newFormatted);
+        localStorage.setItem('quest_active_trip', JSON.stringify(newFormatted));
+        return newFormatted;
+      }
+    } catch (err) {
+      console.warn('API create trip error, falling back locally:', err);
+      const localTrip = {
+        id: `trip-${Date.now()}`,
+        title: tripDetails.title || 'My Customized Travel Plan',
+        destination: tripDetails.destination || 'Paris, France',
+        coverImage: tripDetails.coverImage || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
+        startDate: tripDetails.startDate || 'Flexible Dates',
+        endDate: tripDetails.endDate || 'Flexible Dates',
+        budgetLimit: Number(tripDetails.budgetLimit) || 0,
+        days: [
+          { dayNumber: 1, date: calculateDayDate(tripDetails.startDate, 1), title: 'Day 1 Arrival & Hotel Check-in', activities: [] }
+        ],
+        expenses: [],
+        documents: [],
+        comments: [{ id: 1, author: user?.name || 'You', text: 'Started new personalized plan.', time: 'Just now' }],
+        packingList: [{ id: 'p-1', text: 'Passport', category: 'Documents', completed: true }]
+      };
+      setActiveTrip(localTrip);
+      localStorage.setItem('quest_active_trip', JSON.stringify(localTrip));
+      return localTrip;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateBudgetLimit = async (newLimit) => {
+    if (!activeTrip) return;
+    const limitNum = Number(newLimit) || 0;
+    try {
+      await api.updateTrip(activeTrip.id, { budgetLimit: limitNum });
+    } catch (err) {
+      console.warn('Failed to update trip budget limit on backend:', err);
+    }
+    updateTripState({ ...activeTrip, budgetLimit: limitNum });
+  };
+
+  const addActivity = async (dayNumber, newActivity) => {
+    if (!activeTrip) return;
+
+    const actId = `act-${Date.now()}`;
+    const activityObj = { ...newActivity, id: actId };
+
+    try {
+      await api.addActivity(activeTrip.id, { dayNumber, ...newActivity });
+    } catch (err) {
+      console.warn('API add activity failed, saving locally:', err);
+    }
+
+    let updatedExpenses = activeTrip.expenses || [];
+    if (newActivity.price && Number(newActivity.price) > 0) {
+      const expCategory = newActivity.type === 'flight' || newActivity.type === 'hotel' ? 'Transport' : 
+                          newActivity.type === 'food' ? 'Food' : 'Activities';
+      const expenseObj = {
+        id: `exp-${Date.now()}`,
+        activityId: actId,
+        title: newActivity.title,
+        amount: Number(newActivity.price),
+        payer: user?.name || 'You',
+        category: expCategory,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      try {
+        await api.addExpense({ tripId: activeTrip.id, ...expenseObj });
+      } catch (e) {
+        console.warn('API add expense for activity failed:', e);
+      }
+
+      updatedExpenses = [...updatedExpenses, expenseObj];
+    }
+
     const updatedDays = activeTrip.days.map((day) => {
       if (day.dayNumber === dayNumber) {
         return {
           ...day,
-          activities: [...day.activities, { ...newActivity, id: `act-${Date.now()}` }]
+          activities: [...day.activities, activityObj]
         };
       }
       return day;
     });
-    updateTripState({ ...activeTrip, days: updatedDays });
+
+    updateTripState({ ...activeTrip, days: updatedDays, expenses: updatedExpenses });
   };
 
-  const removeActivity = (dayNumber, activityId) => {
+  const removeActivity = async (dayNumber, activityId) => {
+    if (!activeTrip) return;
+
+    let targetTitle = '';
+    activeTrip.days.forEach(day => {
+      const found = day.activities.find(a => a.id === activityId);
+      if (found) targetTitle = found.title;
+    });
+
+    try {
+      await api.deleteActivity(activeTrip.id, activityId);
+    } catch (err) {
+      console.warn('API delete activity failed:', err);
+    }
+
+    let updatedExpenses = activeTrip.expenses || [];
+    const matchingExp = updatedExpenses.find(e => e.activityId === activityId || (targetTitle && e.title === targetTitle));
+    if (matchingExp) {
+      try {
+        await api.deleteExpense(matchingExp.id);
+      } catch (e) {
+        console.warn('API delete expense for activity failed:', e);
+      }
+      updatedExpenses = updatedExpenses.filter(e => e.id !== matchingExp.id);
+    }
+
     const updatedDays = activeTrip.days.map((day) => {
       if (day.dayNumber === dayNumber) {
         return {
@@ -105,41 +252,68 @@ export const TripProvider = ({ children }) => {
       }
       return day;
     });
-    updateTripState({ ...activeTrip, days: updatedDays });
+
+    updateTripState({ ...activeTrip, days: updatedDays, expenses: updatedExpenses });
+  };
+
+  const removeExpense = async (expenseId) => {
+    if (!activeTrip) return;
+    try {
+      await api.deleteExpense(expenseId);
+    } catch (err) {
+      console.warn('API delete expense failed:', err);
+    }
+    const updatedExpenses = (activeTrip.expenses || []).filter(e => e.id !== expenseId);
+    updateTripState({ ...activeTrip, expenses: updatedExpenses });
   };
 
   const addDay = () => {
+    if (!activeTrip) return;
     const nextDayNum = activeTrip.days.length + 1;
     const newDay = {
       dayNumber: nextDayNum,
-      date: `2026-09-${10 + nextDayNum - 1}`,
+      date: calculateDayDate(activeTrip.startDate, nextDayNum),
       title: `Day ${nextDayNum} Exploration`,
       activities: []
     };
     updateTripState({ ...activeTrip, days: [...activeTrip.days, newDay] });
   };
 
-  const addComment = (text, author = 'You (Alex)') => {
+  const addComment = (text) => {
+    if (!activeTrip) return;
     const newComment = {
       id: Date.now(),
-      author,
+      author: user?.name || 'You',
       text,
       time: 'Just now'
     };
-    updateTripState({ ...activeTrip, comments: [...activeTrip.comments, newComment] });
+    updateTripState({ ...activeTrip, comments: [...(activeTrip.comments || []), newComment] });
   };
 
-  const addExpense = (expense) => {
+  const addExpense = async (expense) => {
+    if (!activeTrip) return;
+    try {
+      await api.addExpense({ tripId: activeTrip.id, ...expense });
+    } catch (err) {
+      console.warn('API add expense failed:', err);
+    }
     const newExp = { ...expense, id: Date.now() };
-    updateTripState({ ...activeTrip, expenses: [...activeTrip.expenses, newExp] });
+    updateTripState({ ...activeTrip, expenses: [...(activeTrip.expenses || []), newExp] });
   };
 
-  const addDocument = (doc) => {
+  const addDocument = async (doc) => {
+    if (!activeTrip) return;
+    try {
+      await api.addDocument({ tripId: activeTrip.id, ...doc });
+    } catch (err) {
+      console.warn('API add document failed:', err);
+    }
     const newDoc = { ...doc, id: `doc-${Date.now()}` };
-    updateTripState({ ...activeTrip, documents: [...activeTrip.documents, newDoc] });
+    updateTripState({ ...activeTrip, documents: [...(activeTrip.documents || []), newDoc] });
   };
 
   const togglePackingItem = (id) => {
+    if (!activeTrip) return;
     const updated = activeTrip.packingList.map((item) =>
       item.id === id ? { ...item, completed: !item.completed } : item
     );
@@ -147,31 +321,33 @@ export const TripProvider = ({ children }) => {
   };
 
   const addPackingItem = (text, category = 'Essentials') => {
+    if (!activeTrip) return;
     const newItem = { id: `p-${Date.now()}`, text, category, completed: false };
-    updateTripState({ ...activeTrip, packingList: [...activeTrip.packingList, newItem] });
+    updateTripState({ ...activeTrip, packingList: [...(activeTrip.packingList || []), newItem] });
   };
 
   const cloneTemplate = (template) => {
-    const clonedTrip = {
-      ...initialTrip,
-      id: `trip-${Date.now()}`,
+    createCustomTrip({
       title: template.title,
       destination: template.destination,
-      coverImage: template.coverImage || initialTrip.coverImage,
-      days: template.days || initialTrip.days
-    };
-    updateTripState(clonedTrip);
+      coverImage: template.coverImage,
+      days: template.days
+    });
   };
 
   return (
     <TripContext.Provider
       value={{
         activeTrip,
+        loading,
+        createCustomTrip,
+        updateBudgetLimit,
         addActivity,
         removeActivity,
         addDay,
         addComment,
         addExpense,
+        removeExpense,
         addDocument,
         togglePackingItem,
         addPackingItem,

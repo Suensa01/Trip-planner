@@ -29,6 +29,41 @@ router.get('/users', async (req, res) => {
   }
 });
 
+// GET /api/admin/trips - List all trips across all travelers
+router.get('/trips', async (req, res) => {
+  try {
+    const trips = await prisma.trip.findMany({
+      include: {
+        user: { select: { name: true, email: true } },
+        _count: { select: { activities: true, expenses: true, documents: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ trips });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch platform trips.' });
+  }
+});
+
+// DELETE /api/admin/trips/:id - Admin Delete any trip
+router.delete('/trips/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.trip.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: `Admin deleted trip ${id}`
+      }
+    });
+
+    res.json({ message: 'Trip deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete trip.' });
+  }
+});
+
 // PUT /api/admin/users/:id/role - Change user role (TRAVELER <-> ADMIN)
 router.put('/users/:id/role', async (req, res) => {
   try {

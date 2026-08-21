@@ -12,7 +12,6 @@ function Login() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('TRAVELER');
     const [agree, setAgree] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -33,8 +32,8 @@ function Login() {
         setSubmitting(true);
         try {
             if (isRegister) {
-                const user = await register(name, email, password, role);
-                setSuccess(`Account created for ${user?.name || email} (${role})! Redirecting...`);
+                const user = await register(name, email, password, 'TRAVELER');
+                setSuccess(`Account created for ${user?.name || email}! Redirecting...`);
             } else {
                 const user = await login(email, password);
                 setSuccess(`Signed in as ${user?.name || email}! Redirecting...`);
@@ -81,26 +80,16 @@ function Login() {
 
                 <Form onSubmit={handleSubmit}>
                     {isRegister && (
-                        <>
-                            <Form.Group className="mb-3">
-                                <Form.Label className="small text-light">Full Name</Form.Label>
-                                <Form.Control 
-                                    type="text" 
-                                    placeholder="Enter your name" 
-                                    value={name} 
-                                    onChange={(e) => setName(e.target.value)} 
-                                    required 
-                                />
-                            </Form.Group>
-
-                            <Form.Group className="mb-3">
-                                <Form.Label className="small text-light">Account Role</Form.Label>
-                                <Form.Select value={role} onChange={(e) => setRole(e.target.value)}>
-                                    <option value="TRAVELER">🌍 Standard Traveler</option>
-                                    <option value="ADMIN">🛡️ Platform Administrator (ADMIN)</option>
-                                </Form.Select>
-                            </Form.Group>
-                        </>
+                        <Form.Group className="mb-3">
+                            <Form.Label className="small text-light">Full Name</Form.Label>
+                            <Form.Control 
+                                type="text" 
+                                placeholder="Enter your name" 
+                                value={name} 
+                                onChange={(e) => setName(e.target.value)} 
+                                required 
+                            />
+                        </Form.Group>
                     )}
 
                     <Form.Group className="mb-3">

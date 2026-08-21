@@ -21,12 +21,17 @@ function WeatherChecklist() {
   const [newItemText, setNewItemText] = useState('');
   const [newCategory, setNewCategory] = useState('Essentials');
 
-  const items = activeTrip.packingList || [];
+  const items = activeTrip?.packingList || [];
   const completedCount = items.filter(i => i.completed).length;
   const progressPercent = items.length ? Math.round((completedCount / items.length) * 100) : 0;
 
   const handleAddChecklist = (e) => {
     e.preventDefault();
+    if (!activeTrip) {
+      showToast('No Active Trip', 'Please create or select an active trip first.', 'warning', 'bi-exclamation-circle');
+      return;
+    }
+
     if (newItemText.trim()) {
       addPackingItem(newItemText.trim(), newCategory);
       showToast('Item Added!', `Added "${newItemText.trim()}" to packing checklist.`, 'info', 'bi-check2-square');
@@ -43,7 +48,7 @@ function WeatherChecklist() {
             <h5 className="fw-bold mb-0">
               <i className="bi bi-cloud-sun-fill text-warning me-2"></i>Destination Weather Forecast
             </h5>
-            <small className="text-secondary">{activeTrip.destination}</small>
+            <small className="text-secondary">{activeTrip?.destination || 'Your Selected Destination'}</small>
           </Card.Header>
           <Card.Body className="p-4 d-flex flex-column justify-content-between">
             <div className="d-flex align-items-center justify-content-between mb-4 bg-light p-3 rounded-4">
@@ -114,28 +119,35 @@ function WeatherChecklist() {
               </div>
             </Form>
 
-            <ul className="list-group max-h-240 overflow-auto border rounded-4">
-              {items.map((item) => (
-                <li 
-                  key={item.id} 
-                  className={`list-group-item d-flex justify-content-between align-items-center ${item.completed ? 'bg-light text-muted' : ''}`}
-                  onClick={() => togglePackingItem(item.id)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="d-flex align-items-center gap-2">
-                    <Form.Check 
-                      type="checkbox" 
-                      checked={item.completed} 
-                      onChange={() => {}} 
-                    />
-                    <span className={item.completed ? 'text-decoration-line-through' : 'fw-medium'}>
-                      {item.text}
-                    </span>
-                  </div>
-                  <Badge bg="secondary">{item.category}</Badge>
-                </li>
-              ))}
-            </ul>
+            {items.length === 0 ? (
+              <div className="text-center py-4 bg-light rounded-3 text-muted">
+                <i className="bi bi-check2-square fs-3 opacity-50 d-block mb-1"></i>
+                <span className="small">Your packing list is empty. Add your essential travel items above!</span>
+              </div>
+            ) : (
+              <ul className="list-group max-h-240 overflow-auto border rounded-4">
+                {items.map((item) => (
+                  <li 
+                    key={item.id} 
+                    className={`list-group-item d-flex justify-content-between align-items-center ${item.completed ? 'bg-light text-muted' : ''}`}
+                    onClick={() => togglePackingItem(item.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex align-items-center gap-2">
+                      <Form.Check 
+                        type="checkbox" 
+                        checked={item.completed} 
+                        onChange={() => {}} 
+                      />
+                      <span className={item.completed ? 'text-decoration-line-through' : 'fw-medium'}>
+                        {item.text}
+                      </span>
+                    </div>
+                    <Badge bg="secondary">{item.category}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card.Body>
         </Card>
       </div>
