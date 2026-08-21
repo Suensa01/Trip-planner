@@ -6,6 +6,8 @@ import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Badge from 'react-bootstrap/Badge';
 import Table from 'react-bootstrap/Table';
+import Tabs from 'react-bootstrap/Tabs';
+import Tab from 'react-bootstrap/Tab';
 import Spinner from 'react-bootstrap/Spinner';
 import Alert from 'react-bootstrap/Alert';
 import api from '../../services/api';
@@ -13,21 +15,25 @@ import { useToast } from '../../Context/ToastContext';
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
-  const [stats, setStats] = useState({ totalUsers: 1, totalTrips: 1, totalActivities: 8, totalExpenses: 1865 });
+  const [trips, setTrips] = useState([]);
+  const [stats, setStats] = useState({ totalUsers: 0, totalTrips: 0, totalActivities: 0, totalExpenses: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('users');
   const { showToast } = useToast();
 
   const loadAdminData = async () => {
     setLoading(true);
     setError('');
     try {
-      const [usersRes, statsRes] = await Promise.all([
+      const [usersRes, tripsRes, statsRes] = await Promise.all([
         api.getAdminUsers().catch(() => null),
+        api.getAdminTrips().catch(() => null),
         api.getAdminStats().catch(() => null)
       ]);
 
       if (usersRes?.users) setUsers(usersRes.users);
+      if (tripsRes?.trips) setTrips(tripsRes.trips);
       if (statsRes?.stats) setStats(statsRes.stats);
     } catch (err) {
       setError('Failed to fetch live admin data from backend server.');
@@ -63,6 +69,18 @@ function AdminDashboard() {
     }
   };
 
+  const handleDeleteTrip = async (tripId, title) => {
+    if (window.confirm(`Are you sure you want to delete trip "${title}"?`)) {
+      try {
+        await api.deleteAdminTrip(tripId);
+        setTrips(trips.filter(t => t.id !== tripId));
+        showToast('Trip Deleted', `Removed trip "${title}".`, 'danger', 'bi-trash-fill');
+      } catch (err) {
+        showToast('Delete Failed', err.message || 'Could not delete trip', 'danger', 'bi-exclamation-triangle-fill');
+      }
+    }
+  };
+
   return (
     <div className="admin-dashboard-page pb-5 text-start" style={{ paddingTop: '90px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
       <Container>
@@ -70,13 +88,13 @@ function AdminDashboard() {
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 bg-dark text-white p-4 rounded-4 shadow">
           <div>
             <Badge bg="danger" className="mb-2 px-3 py-1 fs-6">
-              <i className="bi bi-shield-fill-check me-1"></i>ADMIN PORTAL
+              <i className="bi bi-shield-fill-check me-1"></i>SUPER ADMIN CONTROL CENTER
             </Badge>
-            <h2 className="fw-bold mb-1">Platform Control Center & Security Audit</h2>
-            <p className="mb-0 text-light opacity-75 small">Manage user roles, platform trips, access permissions, and analytics.</p>
+            <h2 className="fw-bold mb-1">Quest Platform Audit & System Control</h2>
+            <p className="mb-0 text-light opacity-75 small">Full CRUD access to user accounts, roles, trip plans, and analytics in Supabase PostgreSQL.</p>
           </div>
           <Button variant="outline-light" onClick={loadAdminData} className="mt-3 mt-md-0 fw-bold">
-            <i className="bi bi-arrow-clockwise me-1"></i>Refresh Analytics
+            <i className="bi bi-arrow-clockwise me-1"></i>Refresh Live Data
           </Button>
         </div>
 
@@ -124,7 +142,7 @@ function AdminDashboard() {
             <Card className="shadow-sm border-0 rounded-4 text-start p-3 bg-danger text-white">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <span className="small opacity-75 fw-bold text-uppercase">Expense Volume</span>
+                  <span className="small opacity-75 fw-bold text-uppercase">Financial Volume</span>
                   <h2 className="display-6 fw-bold mb-0">${stats.totalExpenses}</h2>
                 </div>
                 <i className="bi bi-cash-stack display-5 opacity-50"></i>
@@ -133,27 +151,29 @@ function AdminDashboard() {
           </Col>
         </Row>
 
-        {/* User Role Management Table */}
+        {/* Tabbed Data Views */}
         <Card className="shadow-sm border-0 rounded-4 overflow-hidden">
-          <Card.Header className="bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
-            <h5 className="fw-bold mb-0 text-dark">
-              <i className="bi bi-person-badge-fill text-danger me-2"></i>User Directory & Access Roles (RBAC)
-            </h5>
-            <Badge bg="secondary" className="px-3 py-2">{users.length} Users Listed</Badge>
+          <Card.Header className="bg-white p-3 border-bottom">
+            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="border-0">
+              <Tab eventKey="users" title={<span><i className="bi bi-person-badge-fill text-primary me-2"></i>User Directory ({users.length})</span>} />
+              <Tab eventKey="trips" title={<span><i className="bi bi-compass-fill text-success me-2"></i>All User Trips ({trips.length})</span>} />
+            </Tabs>
           </Card.Header>
+
           <Card.Body className="p-0">
             {loading ? (
               <div className="text-center py-5">
                 <Spinner animation="border" variant="danger" />
-                <p className="small text-muted mt-2">Loading user directory from server...</p>
+                <p className="small text-muted mt-2">Loading Supabase database records...</p>
               </div>
-            ) : (
+            ) : activeTab === 'users' ? (
               <Table responsive hover className="mb-0 align-middle">
                 <thead className="table-light small text-uppercase">
                   <tr>
                     <th className="ps-4">User</th>
                     <th>Email</th>
                     <th>Access Role</th>
+                    <th>Trips</th>
                     <th>Joined</th>
                     <th className="text-end pe-4">Actions</th>
                   </tr>
@@ -173,6 +193,7 @@ function AdminDashboard() {
                           {u.role || 'TRAVELER'}
                         </Badge>
                       </td>
+                      <td className="fw-semibold">{u._count?.trips || 0}</td>
                       <td className="text-muted small">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Recent'}</td>
                       <td className="text-end pe-4">
                         <Button 
@@ -194,11 +215,58 @@ function AdminDashboard() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </Table>
+            ) : (
+              <Table responsive hover className="mb-0 align-middle">
+                <thead className="table-light small text-uppercase">
+                  <tr>
+                    <th className="ps-4">Trip Title</th>
+                    <th>Destination</th>
+                    <th>Created By</th>
+                    <th>Budget</th>
+                    <th>Activities</th>
+                    <th className="text-end pe-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trips.map((t) => (
+                    <tr key={t.id}>
+                      <td className="ps-4">
+                        <div className="d-flex align-items-center gap-2">
+                          <img src={t.coverImage} alt={t.title} className="rounded-3" style={{ width: '48px', height: '36px', objectFit: 'cover' }} />
+                          <div>
+                            <strong className="text-dark d-block">{t.title}</strong>
+                            <span className="small text-muted">{t.startDate} - {t.endDate}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="fw-semibold text-secondary">{t.destination}</td>
+                      <td>
+                        <Badge bg="info" className="text-dark px-2 py-1">
+                          {t.user?.name || 'Traveler'} ({t.user?.email})
+                        </Badge>
+                      </td>
+                      <td className="fw-bold text-success">${t.budgetLimit}</td>
+                      <td>
+                        <Badge bg="secondary" className="px-2 py-1">{t._count?.activities || 0} activities</Badge>
+                      </td>
+                      <td className="text-end pe-4">
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm" 
+                          onClick={() => handleDeleteTrip(t.id, t.title)}
+                        >
+                          <i className="bi bi-trash-fill me-1"></i>Delete Trip
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
 
-                  {!users.length && (
+                  {!trips.length && (
                     <tr>
-                      <td colSpan="5" className="text-center py-4 text-muted">
-                        No registered users found in backend database yet.
+                      <td colSpan="6" className="text-center py-4 text-muted">
+                        No trips found in database.
                       </td>
                     </tr>
                   )}

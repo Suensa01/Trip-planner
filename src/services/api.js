@@ -59,6 +59,8 @@ export const api = {
 
   // Admin API (RBAC)
   getAdminUsers: () => request('/admin/users'),
+  getAdminTrips: () => request('/admin/trips'),
+  deleteAdminTrip: (tripId) => request(`/admin/trips/${tripId}`, { method: 'DELETE' }),
   updateUserRole: (userId, role) => request(`/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
   deleteUser: (userId) => request(`/admin/users/${userId}`, { method: 'DELETE' }),
   getAdminStats: () => request('/admin/stats')
