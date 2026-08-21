@@ -4,6 +4,14 @@ import { useAuth } from './AuthContext';
 
 const TripContext = createContext();
 
+const calculateDayDate = (startDateStr, dayNumber) => {
+  if (!startDateStr) return `Day ${dayNumber}`;
+  const start = new Date(startDateStr);
+  if (isNaN(start.getTime())) return `Day ${dayNumber}`;
+  start.setDate(start.getDate() + (dayNumber - 1));
+  return start.toISOString().split('T')[0];
+};
+
 export const TripProvider = ({ children }) => {
   const { user } = useAuth();
   const [activeTrip, setActiveTrip] = useState(null);
@@ -21,7 +29,6 @@ export const TripProvider = ({ children }) => {
     api.getTrips()
       .then((res) => {
         if (res.trip) {
-          // Normalize day activities format
           const formattedTrip = formatTripFromApi(res.trip);
           setActiveTrip(formattedTrip);
           localStorage.setItem('quest_active_trip', JSON.stringify(formattedTrip));
@@ -40,10 +47,14 @@ export const TripProvider = ({ children }) => {
         }
       })
       .finally(() => setLoading(false));
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const formatTripFromApi = (tripData) => {
+    const startDate = tripData.startDate || '';
+    const endDate = tripData.endDate || '';
+    const budgetLimit = Number(tripData.budgetLimit) || 0;
+
     // Group activities by dayNumber
     const daysMap = {};
     if (tripData.activities && Array.isArray(tripData.activities)) {
@@ -52,7 +63,7 @@ export const TripProvider = ({ children }) => {
         if (!daysMap[dNum]) {
           daysMap[dNum] = {
             dayNumber: dNum,
-            date: `Day ${dNum}`,
+            date: calculateDayDate(startDate, dNum),
             title: `Day ${dNum} Plan`,
             activities: []
           };
@@ -78,16 +89,16 @@ export const TripProvider = ({ children }) => {
       title: tripData.title,
       destination: tripData.destination,
       coverImage: tripData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80',
-      startDate: tripData.startDate || '2026-10-01',
-      endDate: tripData.endDate || '2026-10-05',
-      budgetLimit: tripData.budgetLimit || 2500,
+      startDate: startDate || 'Flexible Dates',
+      endDate: endDate || 'Flexible Dates',
+      budgetLimit: budgetLimit,
       days: days.length ? days : [
-        { dayNumber: 1, date: tripData.startDate || 'Day 1', title: 'Day 1 Arrival & Discovery', activities: [] }
+        { dayNumber: 1, date: calculateDayDate(startDate, 1), title: 'Day 1 Arrival & Discovery', activities: [] }
       ],
       expenses: tripData.expenses || [],
       documents: tripData.documents || [],
       comments: [
-        { id: 1, author: user?.name || 'You', text: `Created personalized trip: ${tripData.title}`, time: 'Just now' }
+        { id: 1, author: user?.name || 'You', text: `Created trip: ${tripData.title}`, time: 'Just now' }
       ],
       packingList: [
         { id: 'p-1', text: 'Passport & Travel IDs', category: 'Documents', completed: true },
@@ -105,7 +116,16 @@ export const TripProvider = ({ children }) => {
   const createCustomTrip = async (tripDetails) => {
     setLoading(true);
     try {
-      const res = await api.createTrip(tripDetails);
+      const payload = {
+        title: tripDetails.title,
+        destination: tripDetails.destination,
+        startDate: tripDetails.startDate,
+        endDate: tripDetails.endDate,
+        budgetLimit: Number(tripDetails.budgetLimit) || 0,
+        coverImage: tripDetails.coverImage
+      };
+
+      const res = await api.createTrip(payload);
       if (res.trip) {
         const newFormatted = formatTripFromApi(res.trip);
         setActiveTrip(newFormatted);
@@ -113,17 +133,17 @@ export const TripProvider = ({ children }) => {
         return newFormatted;
       }
     } catch (err) {
-      // Local fallback creation
+      console.warn('API create trip error, falling back locally:', err);
       const localTrip = {
         id: `trip-${Date.now()}`,
         title: tripDetails.title || 'My Customized Travel Plan',
         destination: tripDetails.destination || 'Paris, France',
         coverImage: tripDetails.coverImage || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
-        startDate: tripDetails.startDate || '2026-10-01',
-        endDate: tripDetails.endDate || '2026-10-05',
-        budgetLimit: Number(tripDetails.budgetLimit) || 3000,
+        startDate: tripDetails.startDate || 'Flexible Dates',
+        endDate: tripDetails.endDate || 'Flexible Dates',
+        budgetLimit: Number(tripDetails.budgetLimit) || 0,
         days: [
-          { dayNumber: 1, date: 'Day 1', title: 'Arrival & Hotel Check-in', activities: [] }
+          { dayNumber: 1, date: calculateDayDate(tripDetails.startDate, 1), title: 'Day 1 Arrival & Hotel Check-in', activities: [] }
         ],
         expenses: [],
         documents: [],
@@ -136,6 +156,17 @@ export const TripProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateBudgetLimit = async (newLimit) => {
+    if (!activeTrip) return;
+    const limitNum = Number(newLimit) || 0;
+    try {
+      await api.updateTrip(activeTrip.id, { budgetLimit: limitNum });
+    } catch (err) {
+      console.warn('Failed to update trip budget limit on backend:', err);
+    }
+    updateTripState({ ...activeTrip, budgetLimit: limitNum });
   };
 
   const addActivity = async (dayNumber, newActivity) => {
@@ -185,7 +216,7 @@ export const TripProvider = ({ children }) => {
     const nextDayNum = activeTrip.days.length + 1;
     const newDay = {
       dayNumber: nextDayNum,
-      date: `Day ${nextDayNum}`,
+      date: calculateDayDate(activeTrip.startDate, nextDayNum),
       title: `Day ${nextDayNum} Exploration`,
       activities: []
     };
@@ -254,6 +285,7 @@ export const TripProvider = ({ children }) => {
         activeTrip,
         loading,
         createCustomTrip,
+        updateBudgetLimit,
         addActivity,
         removeActivity,
         addDay,

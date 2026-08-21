@@ -24,53 +24,53 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/trips - Create new trip or clone template
+// POST /api/trips - Create new custom trip
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { title, destination, coverImage, days } = req.body;
+    const { title, destination, coverImage, budgetLimit, startDate, endDate } = req.body;
 
     const newTrip = await prisma.trip.create({
       data: {
         userId: req.user.id,
-        title: title || 'New Travel Plan',
-        destination: destination || 'Rome, Italy',
-        coverImage: coverImage || 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
-        budgetLimit: 2500,
-        startDate: '2026-10-01',
-        endDate: '2026-10-05'
+        title: title || 'My Custom Travel Plan',
+        destination: destination || 'Paris, France',
+        coverImage: coverImage || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
+        budgetLimit: Number(budgetLimit) || 0,
+        startDate: startDate || '2026-10-01',
+        endDate: endDate || '2026-10-05'
+      },
+      include: {
+        activities: true,
+        expenses: true,
+        documents: true
       }
     });
 
-    if (days && Array.isArray(days)) {
-      for (const day of days) {
-        if (day.activities && Array.isArray(day.activities)) {
-          for (const act of day.activities) {
-            await prisma.activity.create({
-              data: {
-                tripId: newTrip.id,
-                dayNumber: day.dayNumber || 1,
-                title: act.title,
-                type: act.type || 'activity',
-                time: act.time || '10:00 AM',
-                location: act.location || destination,
-                price: Number(act.price) || 0,
-                notes: act.notes || ''
-              }
-            });
-          }
-        }
-      }
-    }
-
-    const fullTrip = await prisma.trip.findUnique({
-      where: { id: newTrip.id },
-      include: { activities: true, expenses: true, documents: true }
-    });
-
-    res.status(201).json({ trip: fullTrip });
+    res.status(201).json({ trip: newTrip });
   } catch (err) {
     console.error('Create Trip Error:', err);
     res.status(500).json({ error: 'Failed to create trip.' });
+  }
+});
+
+// PUT /api/trips/:id - Update trip details (budgetLimit, title, destination)
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { budgetLimit, title, destination } = req.body;
+
+    const updatedTrip = await prisma.trip.update({
+      where: { id },
+      data: {
+        ...(budgetLimit !== undefined && { budgetLimit: Number(budgetLimit) }),
+        ...(title && { title }),
+        ...(destination && { destination })
+      }
+    });
+
+    res.json({ trip: updatedTrip });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update trip details.' });
   }
 });
 

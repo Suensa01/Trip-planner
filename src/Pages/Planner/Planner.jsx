@@ -25,17 +25,17 @@ function Planner() {
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [budgetLimit, setBudgetLimit] = useState(3000);
+  const [budgetLimit, setBudgetLimit] = useState('');
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80');
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     await createCustomTrip({
-      title: title || `${destination || 'Travel'} Getaway`,
-      destination: destination || 'Paris, France',
-      startDate: startDate || '2026-10-01',
-      endDate: endDate || '2026-10-06',
-      budgetLimit: Number(budgetLimit) || 3000,
+      title: title || `${destination || 'My'} Trip`,
+      destination: destination || 'Goa, India',
+      startDate: startDate || new Date().toISOString().split('T')[0],
+      endDate: endDate || new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
+      budgetLimit: Number(budgetLimit) || 0,
       coverImage
     });
     setShowCreateModal(false);
