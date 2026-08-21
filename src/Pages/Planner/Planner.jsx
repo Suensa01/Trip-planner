@@ -9,24 +9,30 @@ import Badge from 'react-bootstrap/Badge';
 import Modal from 'react-bootstrap/Modal';
 import Spinner from 'react-bootstrap/Spinner';
 import { useTrip } from '../../Context/TripContext';
+import { useToast } from '../../Context/ToastContext';
 import PlannerTimeline from '../../Components/Planner/PlannerTimeline';
 import InteractiveMap from '../../Components/Planner/InteractiveMap';
 import CollaborationModal from '../../Components/Planner/CollaborationModal';
 import './Planner.css';
 
 function Planner() {
-  const { activeTrip, loading, createCustomTrip } = useTrip();
+  const { activeTrip, loading, createCustomTrip, updateBudgetLimit } = useTrip();
+  const { showToast } = useToast();
   const [selectedDay, setSelectedDay] = useState(1);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   // New Trip Form State
   const [title, setTitle] = useState('');
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [budgetLimit, setBudgetLimit] = useState('');
+  const [budgetLimitInput, setBudgetLimitInput] = useState('');
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80');
+
+  // Edit Budget state
+  const [editBudgetVal, setEditBudgetVal] = useState('');
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -35,10 +41,19 @@ function Planner() {
       destination: destination || 'Goa, India',
       startDate: startDate || new Date().toISOString().split('T')[0],
       endDate: endDate || new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
-      budgetLimit: Number(budgetLimit) || 0,
+      budgetLimit: Number(budgetLimitInput) || 0,
       coverImage
     });
     setShowCreateModal(false);
+  };
+
+  const handleSaveBudget = async (e) => {
+    e.preventDefault();
+    if (!activeTrip) return;
+    const limitNum = Number(editBudgetVal) || 0;
+    await updateBudgetLimit(limitNum);
+    showToast('Budget Updated!', `Set trip budget limit to $${limitNum}.`, 'success', 'bi-wallet-fill');
+    setShowBudgetModal(false);
   };
 
   if (loading) {
@@ -99,7 +114,7 @@ function Planner() {
                       <Form.Label className="small fw-bold">Trip Title</Form.Label>
                       <Form.Control 
                         type="text" 
-                        placeholder="e.g., Summer in Amalfi & Rome"
+                        placeholder="e.g., Goa Beach Adventure"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
@@ -111,7 +126,7 @@ function Planner() {
                       <Form.Label className="small fw-bold">Destination</Form.Label>
                       <Form.Control 
                         type="text" 
-                        placeholder="e.g., Tokyo, Japan"
+                        placeholder="e.g., Goa, India"
                         value={destination}
                         onChange={(e) => setDestination(e.target.value)}
                         required
@@ -143,13 +158,12 @@ function Planner() {
                   </Col>
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold">Budget Limit ($)</Form.Label>
+                      <Form.Label className="small fw-bold">Target Budget ($)</Form.Label>
                       <Form.Control 
                         type="number" 
-                        placeholder="3000"
-                        value={budgetLimit}
-                        onChange={(e) => setBudgetLimit(e.target.value)}
-                        required
+                        placeholder="e.g. 1500"
+                        value={budgetLimitInput}
+                        onChange={(e) => setBudgetLimitInput(e.target.value)}
                       />
                     </Form.Group>
                   </Col>
@@ -159,10 +173,10 @@ function Planner() {
                       <Form.Label className="small fw-bold">Cover Photo Preset</Form.Label>
                       <div className="d-flex gap-2 flex-wrap">
                         {[
-                          { name: 'Paris', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80' },
+                          { name: 'Beach', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80' },
                           { name: 'Tokyo', url: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80' },
                           { name: 'Rome', url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80' },
-                          { name: 'Beach', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80' }
+                          { name: 'Paris', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80' }
                         ].map((preset) => (
                           <Button 
                             key={preset.name}
@@ -198,6 +212,9 @@ function Planner() {
     (sum, day) => sum + (day.activities || []).reduce((dSum, act) => dSum + (act.price || 0), 0),
     0
   );
+
+  const budgetLimit = Number(activeTrip.budgetLimit) || 0;
+  const remainingBudget = budgetLimit - totalCost;
 
   return (
     <div className="planner-page pb-5 text-start">
@@ -261,11 +278,28 @@ function Planner() {
             </div>
           </Col>
           <Col md={3} sm={6}>
-            <div className="bg-white p-3 rounded-4 shadow-sm border text-start">
-              <span className="text-muted small">Budget Status</span>
-              <h4 className={`fw-bold mb-0 ${totalCost > activeTrip.budgetLimit ? 'text-danger' : 'text-primary'}`}>
-                ${(activeTrip.budgetLimit || 2500) - totalCost} Left
+            <div className="bg-white p-3 rounded-4 shadow-sm border text-start position-relative">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <span className="text-muted small">Budget Status</span>
+                <Button 
+                  variant="link" 
+                  className="p-0 text-coral small text-decoration-none fw-bold"
+                  onClick={() => {
+                    setEditBudgetVal(budgetLimit || '');
+                    setShowBudgetModal(true);
+                  }}
+                >
+                  <i className="bi bi-pencil-square me-1"></i>{budgetLimit > 0 ? 'Edit' : 'Set'}
+                </Button>
+              </div>
+              <h4 className={`fw-bold mb-0 ${budgetLimit > 0 && remainingBudget < 0 ? 'text-danger' : 'text-primary'}`}>
+                {budgetLimit > 0 ? `$${remainingBudget} Left` : 'Not Set'}
               </h4>
+              {budgetLimit > 0 && (
+                <small className="text-muted d-block opacity-75" style={{ fontSize: '0.75rem' }}>
+                  Target Limit: ${budgetLimit}
+                </small>
+              )}
             </div>
           </Col>
         </Row>
@@ -285,6 +319,37 @@ function Planner() {
           </Col>
         </Row>
       </Container>
+
+      {/* Set/Edit Trip Budget Modal */}
+      <Modal show={showBudgetModal} onHide={() => setShowBudgetModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="fw-bold">
+            <i className="bi bi-wallet2 text-coral me-2"></i>Set Custom Trip Budget Limit
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSaveBudget}>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-bold small">Target Trip Budget ($)</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter budget (e.g. 1500)"
+                value={editBudgetVal}
+                onChange={(e) => setEditBudgetVal(e.target.value)}
+                required
+              />
+              <Form.Text className="text-muted">
+                This budget limit will sync instantly across your Trips Planner & Financial Tools!
+              </Form.Text>
+            </Form.Group>
+
+            <div className="text-end mt-4">
+              <Button variant="light" className="me-2" onClick={() => setShowBudgetModal(false)}>Cancel</Button>
+              <Button variant="coral" type="submit" className="btn-coral fw-bold">Save Budget</Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
 
       {/* Real-Time Collaboration Modal */}
       <CollaborationModal show={showCollabModal} onHide={() => setShowCollabModal(false)} />
