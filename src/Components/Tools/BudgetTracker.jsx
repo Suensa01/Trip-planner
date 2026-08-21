@@ -11,7 +11,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { useToast } from '../../Context/ToastContext';
 
 function BudgetTracker() {
-  const { activeTrip, addExpense, updateBudgetLimit } = useTrip();
+  const { activeTrip, addExpense, removeExpense, updateBudgetLimit } = useTrip();
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -48,6 +48,11 @@ function BudgetTracker() {
       setTitle('');
       setAmount('');
     }
+  };
+
+  const handleDeleteExpense = async (expenseId, expenseTitle) => {
+    await removeExpense(expenseId);
+    showToast('Expense Deleted', `Removed "${expenseTitle || 'Item'}" from ledger.`, 'danger', 'bi-trash-fill');
   };
 
   const handleSaveBudget = async (e) => {
@@ -170,7 +175,8 @@ function BudgetTracker() {
                 <th>Category</th>
                 <th>Payer</th>
                 <th>Date</th>
-                <th className="text-end">Amount</th>
+                <th>Amount</th>
+                <th className="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -182,7 +188,17 @@ function BudgetTracker() {
                   </td>
                   <td className="small text-muted">{exp.payer || user?.name || 'You'}</td>
                   <td className="small text-muted">{exp.date || 'Today'}</td>
-                  <td className="text-end fw-bold text-coral">${exp.amount}</td>
+                  <td className="fw-bold text-coral">${exp.amount}</td>
+                  <td className="text-end">
+                    <Button 
+                      variant="link" 
+                      className="text-danger p-0 ms-2"
+                      onClick={() => handleDeleteExpense(exp.id, exp.title)}
+                      title="Delete Expense"
+                    >
+                      <i className="bi bi-trash-fill fs-6"></i>
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>

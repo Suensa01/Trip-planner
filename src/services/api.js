@@ -44,11 +44,13 @@ export const api = {
   // Trips API
   getTrips: () => request('/trips'),
   createTrip: (tripData) => request('/trips', { method: 'POST', body: JSON.stringify(tripData) }),
+  updateTrip: (tripId, data) => request(`/trips/${tripId}`, { method: 'PUT', body: JSON.stringify(data) }),
   addActivity: (tripId, activity) => request(`/trips/${tripId}/activities`, { method: 'POST', body: JSON.stringify(activity) }),
   deleteActivity: (tripId, actId) => request(`/trips/${tripId}/activities/${actId}`, { method: 'DELETE' }),
 
   // Expenses API
   addExpense: (expenseData) => request('/expenses', { method: 'POST', body: JSON.stringify(expenseData) }),
+  deleteExpense: (expenseId) => request(`/expenses/${expenseId}`, { method: 'DELETE' }),
 
   // Documents API
   addDocument: (docData) => request('/documents', { method: 'POST', body: JSON.stringify(docData) }),

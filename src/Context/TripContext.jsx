@@ -172,31 +172,75 @@ export const TripProvider = ({ children }) => {
   const addActivity = async (dayNumber, newActivity) => {
     if (!activeTrip) return;
 
+    const actId = `act-${Date.now()}`;
+    const activityObj = { ...newActivity, id: actId };
+
     try {
       await api.addActivity(activeTrip.id, { dayNumber, ...newActivity });
     } catch (err) {
       console.warn('API add activity failed, saving locally:', err);
     }
 
+    let updatedExpenses = activeTrip.expenses || [];
+    if (newActivity.price && Number(newActivity.price) > 0) {
+      const expCategory = newActivity.type === 'flight' || newActivity.type === 'hotel' ? 'Transport' : 
+                          newActivity.type === 'food' ? 'Food' : 'Activities';
+      const expenseObj = {
+        id: `exp-${Date.now()}`,
+        activityId: actId,
+        title: newActivity.title,
+        amount: Number(newActivity.price),
+        payer: user?.name || 'You',
+        category: expCategory,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      try {
+        await api.addExpense({ tripId: activeTrip.id, ...expenseObj });
+      } catch (e) {
+        console.warn('API add expense for activity failed:', e);
+      }
+
+      updatedExpenses = [...updatedExpenses, expenseObj];
+    }
+
     const updatedDays = activeTrip.days.map((day) => {
       if (day.dayNumber === dayNumber) {
         return {
           ...day,
-          activities: [...day.activities, { ...newActivity, id: `act-${Date.now()}` }]
+          activities: [...day.activities, activityObj]
         };
       }
       return day;
     });
-    updateTripState({ ...activeTrip, days: updatedDays });
+
+    updateTripState({ ...activeTrip, days: updatedDays, expenses: updatedExpenses });
   };
 
   const removeActivity = async (dayNumber, activityId) => {
     if (!activeTrip) return;
 
+    let targetTitle = '';
+    activeTrip.days.forEach(day => {
+      const found = day.activities.find(a => a.id === activityId);
+      if (found) targetTitle = found.title;
+    });
+
     try {
       await api.deleteActivity(activeTrip.id, activityId);
     } catch (err) {
       console.warn('API delete activity failed:', err);
+    }
+
+    let updatedExpenses = activeTrip.expenses || [];
+    const matchingExp = updatedExpenses.find(e => e.activityId === activityId || (targetTitle && e.title === targetTitle));
+    if (matchingExp) {
+      try {
+        await api.deleteExpense(matchingExp.id);
+      } catch (e) {
+        console.warn('API delete expense for activity failed:', e);
+      }
+      updatedExpenses = updatedExpenses.filter(e => e.id !== matchingExp.id);
     }
 
     const updatedDays = activeTrip.days.map((day) => {
@@ -208,7 +252,19 @@ export const TripProvider = ({ children }) => {
       }
       return day;
     });
-    updateTripState({ ...activeTrip, days: updatedDays });
+
+    updateTripState({ ...activeTrip, days: updatedDays, expenses: updatedExpenses });
+  };
+
+  const removeExpense = async (expenseId) => {
+    if (!activeTrip) return;
+    try {
+      await api.deleteExpense(expenseId);
+    } catch (err) {
+      console.warn('API delete expense failed:', err);
+    }
+    const updatedExpenses = (activeTrip.expenses || []).filter(e => e.id !== expenseId);
+    updateTripState({ ...activeTrip, expenses: updatedExpenses });
   };
 
   const addDay = () => {
@@ -291,6 +347,7 @@ export const TripProvider = ({ children }) => {
         addDay,
         addComment,
         addExpense,
+        removeExpense,
         addDocument,
         togglePackingItem,
         addPackingItem,
