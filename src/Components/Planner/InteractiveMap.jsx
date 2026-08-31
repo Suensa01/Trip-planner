@@ -111,7 +111,7 @@ function InteractiveMap({ activities = [], activeDayTitle }) {
               <Badge bg="light" text="dark" className="border">
                 <i className="bi bi-clock me-1"></i>{selectedPin.time}
               </Badge>
-              <span className="fw-bold text-coral">${selectedPin.price}</span>
+              <span className="fw-bold text-coral">₹{Number(selectedPin.price || 0).toLocaleString('en-IN')}</span>
             </div>
           </div>
         )}

@@ -17,38 +17,66 @@ export const TripProvider = ({ children }) => {
   const [activeTrip, setActiveTrip] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Sync active trip with Supabase API whenever logged-in user changes
+  const getTripStorageKey = (userObj) => {
+    if (!userObj) return 'quest_active_trip_guest';
+    if (typeof userObj === 'string') return `quest_active_trip_${userObj}`;
+    const identifier = userObj.email ? userObj.email.trim().toLowerCase() : userObj.id;
+    return identifier ? `quest_active_trip_${identifier}` : 'quest_active_trip_guest';
+  };
+
+  // Sync active trip with Supabase API or user-scoped storage whenever logged-in user changes
   useEffect(() => {
+    const userKey = getTripStorageKey(user);
+
     if (!user) {
-      setActiveTrip(null);
-      localStorage.removeItem('quest_active_trip');
+      const guestSaved = localStorage.getItem('quest_active_trip_guest');
+      setActiveTrip(guestSaved ? JSON.parse(guestSaved) : null);
       return;
     }
 
     setLoading(true);
     api.getTrips()
       .then((res) => {
-        if (res.trip) {
+        if (res && res.trip) {
           const formattedTrip = formatTripFromApi(res.trip);
           setActiveTrip(formattedTrip);
-          localStorage.setItem('quest_active_trip', JSON.stringify(formattedTrip));
+          localStorage.setItem(userKey, JSON.stringify(formattedTrip));
         } else {
-          setActiveTrip(null);
-          localStorage.removeItem('quest_active_trip');
+          const saved = localStorage.getItem(userKey);
+          if (saved) {
+            setActiveTrip(JSON.parse(saved));
+          } else {
+            // Migrate guest trip to user if guest trip exists
+            const guestSaved = localStorage.getItem('quest_active_trip_guest');
+            if (guestSaved) {
+              const parsedGuest = JSON.parse(guestSaved);
+              setActiveTrip(parsedGuest);
+              localStorage.setItem(userKey, JSON.stringify(parsedGuest));
+            } else {
+              setActiveTrip(null);
+            }
+          }
         }
       })
       .catch((err) => {
         console.warn('API trip fetch failed, checking local storage:', err);
-        const saved = localStorage.getItem('quest_active_trip');
+        const saved = localStorage.getItem(userKey);
         if (saved) {
           setActiveTrip(JSON.parse(saved));
         } else {
-          setActiveTrip(null);
+          const guestSaved = localStorage.getItem('quest_active_trip_guest');
+          if (guestSaved) {
+            const parsedGuest = JSON.parse(guestSaved);
+            setActiveTrip(parsedGuest);
+            localStorage.setItem(userKey, JSON.stringify(parsedGuest));
+          } else {
+            setActiveTrip(null);
+          }
         }
       })
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, user?.email]);
 
   const formatTripFromApi = (tripData) => {
     const startDate = tripData.startDate || '';
@@ -97,10 +125,11 @@ export const TripProvider = ({ children }) => {
       ],
       expenses: tripData.expenses || [],
       documents: tripData.documents || [],
-      comments: [
+      collaborators: tripData.collaborators || [],
+      comments: tripData.comments || [
         { id: 1, author: user?.name || 'You', text: `Created trip: ${tripData.title}`, time: 'Just now' }
       ],
-      packingList: [
+      packingList: tripData.packingList || [
         { id: 'p-1', text: 'Passport & Travel IDs', category: 'Documents', completed: true },
         { id: 'p-2', text: 'Power Bank & Charger', category: 'Electronics', completed: false },
         { id: 'p-3', text: 'Comfortable Shoes', category: 'Clothing', completed: false }
@@ -110,49 +139,81 @@ export const TripProvider = ({ children }) => {
 
   const updateTripState = (updated) => {
     setActiveTrip(updated);
-    localStorage.setItem('quest_active_trip', JSON.stringify(updated));
+    localStorage.setItem(getTripStorageKey(user), JSON.stringify(updated));
   };
 
   const createCustomTrip = async (tripDetails) => {
     setLoading(true);
     try {
+      let computedTotalCost = 0;
+      let preparedExpenses = [];
+      const preparedDays = tripDetails.days && Array.isArray(tripDetails.days) && tripDetails.days.length > 0 
+        ? tripDetails.days 
+        : [
+            { dayNumber: 1, date: calculateDayDate(tripDetails.startDate, 1), title: 'Day 1 Arrival & Hotel Check-in', activities: [] }
+          ];
+
+      preparedDays.forEach(day => {
+        (day.activities || []).forEach(act => {
+          const priceVal = Number(act.price) || 0;
+          computedTotalCost += priceVal;
+          if (priceVal > 0) {
+            preparedExpenses.push({
+              id: `exp-${Date.now()}-${Math.random()}`,
+              activityId: act.id,
+              title: act.title,
+              amount: priceVal,
+              payer: user?.name || 'You',
+              category: act.type === 'hotel' ? 'Lodging' : act.type === 'food' ? 'Food' : 'Activities',
+              date: new Date().toISOString().split('T')[0]
+            });
+          }
+        });
+      });
+
+      const budgetVal = Number(tripDetails.budgetLimit) || (computedTotalCost > 0 ? computedTotalCost + 300 : 0);
+
       const payload = {
         title: tripDetails.title,
         destination: tripDetails.destination,
         startDate: tripDetails.startDate,
         endDate: tripDetails.endDate,
-        budgetLimit: Number(tripDetails.budgetLimit) || 0,
+        budgetLimit: budgetVal,
         coverImage: tripDetails.coverImage
       };
 
-      const res = await api.createTrip(payload);
-      if (res.trip) {
-        const newFormatted = formatTripFromApi(res.trip);
-        setActiveTrip(newFormatted);
-        localStorage.setItem('quest_active_trip', JSON.stringify(newFormatted));
-        return newFormatted;
+      let newTripObj = null;
+      try {
+        const res = await api.createTrip(payload);
+        if (res && res.trip) {
+          newTripObj = formatTripFromApi(res.trip);
+        }
+      } catch (err) {
+        console.warn('API create trip failed, relying on rich client trip object:', err);
       }
-    } catch (err) {
-      console.warn('API create trip error, falling back locally:', err);
-      const localTrip = {
-        id: `trip-${Date.now()}`,
+
+      const finalTrip = {
+        id: newTripObj?.id || `trip-${Date.now()}`,
         title: tripDetails.title || 'My Customized Travel Plan',
         destination: tripDetails.destination || 'Paris, France',
         coverImage: tripDetails.coverImage || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
         startDate: tripDetails.startDate || 'Flexible Dates',
         endDate: tripDetails.endDate || 'Flexible Dates',
-        budgetLimit: Number(tripDetails.budgetLimit) || 0,
-        days: [
-          { dayNumber: 1, date: calculateDayDate(tripDetails.startDate, 1), title: 'Day 1 Arrival & Hotel Check-in', activities: [] }
-        ],
-        expenses: [],
+        budgetLimit: budgetVal,
+        days: preparedDays,
+        expenses: preparedExpenses,
         documents: [],
-        comments: [{ id: 1, author: user?.name || 'You', text: 'Started new personalized plan.', time: 'Just now' }],
-        packingList: [{ id: 'p-1', text: 'Passport', category: 'Documents', completed: true }]
+        collaborators: [],
+        comments: [{ id: 1, author: user?.name || 'You', text: `Loaded personalized plan: ${tripDetails.title}`, time: 'Just now' }],
+        packingList: [
+          { id: 'p-1', text: 'Passport', category: 'Documents', completed: true },
+          { id: 'p-2', text: 'Travel Insurance', category: 'Documents', completed: false }
+        ]
       };
-      setActiveTrip(localTrip);
-      localStorage.setItem('quest_active_trip', JSON.stringify(localTrip));
-      return localTrip;
+
+      setActiveTrip(finalTrip);
+      localStorage.setItem(getTripStorageKey(user), JSON.stringify(finalTrip));
+      return finalTrip;
     } finally {
       setLoading(false);
     }
@@ -290,6 +351,19 @@ export const TripProvider = ({ children }) => {
     updateTripState({ ...activeTrip, comments: [...(activeTrip.comments || []), newComment] });
   };
 
+  const addCollaborator = (email, role = 'Editor') => {
+    if (!activeTrip) return;
+    const newCollab = {
+      id: `collab-${Date.now()}`,
+      name: email.split('@')[0],
+      email: email,
+      role: role,
+      status: 'Active'
+    };
+    const updatedCollaborators = [...(activeTrip.collaborators || []), newCollab];
+    updateTripState({ ...activeTrip, collaborators: updatedCollaborators });
+  };
+
   const addExpense = async (expense) => {
     if (!activeTrip) return;
     try {
@@ -327,11 +401,12 @@ export const TripProvider = ({ children }) => {
   };
 
   const cloneTemplate = (template) => {
-    createCustomTrip({
+    return createCustomTrip({
       title: template.title,
       destination: template.destination,
-      coverImage: template.coverImage,
-      days: template.days
+      coverImage: template.image || template.coverImage,
+      days: template.days,
+      budgetLimit: template.budgetLimit || 0
     });
   };
 
@@ -346,6 +421,7 @@ export const TripProvider = ({ children }) => {
         removeActivity,
         addDay,
         addComment,
+        addCollaborator,
         addExpense,
         removeExpense,
         addDocument,

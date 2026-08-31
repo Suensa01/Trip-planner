@@ -8,16 +8,26 @@ import TrustSection from '../../Components/Home/TrustSection';
 import TravelerReviewsSection from '../../Components/Home/TravelerReviewsSection';
 import TripConfidenceSection from '../../Components/Home/TripConfidenceSection';
 import PackageDetailModal from '../../Components/PackageDetailModal/PackageDetailModal';
+import { calculateDynamicPrice, formatCurrency } from '../../utils/pricing';
 
 function Home() {
     const [selectedPackage, setSelectedPackage] = useState(null);
 
     const handleSearchSubmit = (searchParams) => {
+        const guestCount = parseInt(searchParams.travelers) || 2;
+        const vibe = searchParams.travelers?.includes('Solo') ? 'Solo' :
+                     searchParams.travelers?.includes('Family') ? 'Family' :
+                     searchParams.travelers?.includes('Group') ? 'Luxury' : 'Couples';
+
+        const priceCalc = calculateDynamicPrice(130, 4, guestCount, vibe);
+        const dynamicFormattedPrice = formatCurrency(priceCalc.total);
+
         setSelectedPackage({
             itemTitle: searchParams.place ? `${searchParams.place} Custom Package` : 'Featured Vacation Package',
-            itemDescription: `Curated ${searchParams.type || 'tour'} package for ${searchParams.travelers || '2 Guests'} in ${searchParams.place || 'Zurich'}. Includes 4-star hotel stay, guided tours, and breakfast.`,
-            itemPrice: '$850',
-            itemNights: '4 nights'
+            itemDescription: `Curated ${searchParams.type || 'tour'} package for ${searchParams.travelers || '2 Guests'} in ${searchParams.place || 'Zurich'}. Includes 4-star luxury hotel stay, guided city tours, and daily breakfast.`,
+            itemPrice: dynamicFormattedPrice,
+            itemNights: '4 nights',
+            category: vibe
         });
     };
 

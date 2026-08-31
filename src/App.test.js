@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './Context/AuthContext';
 import { WishlistProvider } from './Context/WishlistContext';
 import { TripProvider } from './Context/TripContext';
+import { ToastProvider } from './Context/ToastContext';
 
 test('renders Quest brand logo in navigation', () => {
   render(
@@ -11,7 +12,9 @@ test('renders Quest brand logo in navigation', () => {
       <AuthProvider>
         <WishlistProvider>
           <TripProvider>
-            <App />
+            <ToastProvider>
+              <App />
+            </ToastProvider>
           </TripProvider>
         </WishlistProvider>
       </AuthProvider>

@@ -52,7 +52,7 @@ function Planner() {
     if (!activeTrip) return;
     const limitNum = Number(editBudgetVal) || 0;
     await updateBudgetLimit(limitNum);
-    showToast('Budget Updated!', `Set trip budget limit to $${limitNum}.`, 'success', 'bi-wallet-fill');
+    showToast('Budget Updated!', `Set trip budget limit to ₹${limitNum.toLocaleString('en-IN')}.`, 'success', 'bi-wallet-fill');
     setShowBudgetModal(false);
   };
 
@@ -158,10 +158,10 @@ function Planner() {
                   </Col>
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold">Target Budget ($)</Form.Label>
+                      <Form.Label className="small fw-bold">Target Budget (₹)</Form.Label>
                       <Form.Control 
                         type="number" 
-                        placeholder="e.g. 1500"
+                        placeholder="e.g. 15000"
                         value={budgetLimitInput}
                         onChange={(e) => setBudgetLimitInput(e.target.value)}
                       />
@@ -274,7 +274,7 @@ function Planner() {
           <Col md={3} sm={6}>
             <div className="bg-white p-3 rounded-4 shadow-sm border text-start">
               <span className="text-muted small">Total Estimated Cost</span>
-              <h4 className="fw-bold text-coral mb-0">${totalCost}</h4>
+              <h4 className="fw-bold text-coral mb-0">₹{totalCost.toLocaleString('en-IN')}</h4>
             </div>
           </Col>
           <Col md={3} sm={6}>
@@ -293,11 +293,11 @@ function Planner() {
                 </Button>
               </div>
               <h4 className={`fw-bold mb-0 ${budgetLimit > 0 && remainingBudget < 0 ? 'text-danger' : 'text-primary'}`}>
-                {budgetLimit > 0 ? `$${remainingBudget} Left` : 'Not Set'}
+                {budgetLimit > 0 ? `₹${remainingBudget.toLocaleString('en-IN')} Left` : 'Not Set'}
               </h4>
               {budgetLimit > 0 && (
                 <small className="text-muted d-block opacity-75" style={{ fontSize: '0.75rem' }}>
-                  Target Limit: ${budgetLimit}
+                  Target Limit: ₹{budgetLimit.toLocaleString('en-IN')}
                 </small>
               )}
             </div>
@@ -330,10 +330,10 @@ function Planner() {
         <Modal.Body>
           <Form onSubmit={handleSaveBudget}>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold small">Target Trip Budget ($)</Form.Label>
+              <Form.Label className="fw-bold small">Target Trip Budget (₹)</Form.Label>
               <Form.Control
                 type="number"
-                placeholder="Enter budget (e.g. 1500)"
+                placeholder="Enter budget (e.g. 15000)"
                 value={editBudgetVal}
                 onChange={(e) => setEditBudgetVal(e.target.value)}
                 required

@@ -44,7 +44,7 @@ function BudgetTracker() {
         category,
         date: new Date().toISOString().split('T')[0]
       });
-      showToast('Expense Recorded!', `Added $${amount} for "${title}" under ${category}.`, 'success', 'bi-cash-coin');
+      showToast('Expense Recorded!', `Added ₹${Number(amount).toLocaleString('en-IN')} for "${title}" under ${category}.`, 'success', 'bi-cash-coin');
       setTitle('');
       setAmount('');
     }
@@ -64,7 +64,7 @@ function BudgetTracker() {
 
     const limitVal = Number(newBudgetLimit) || 0;
     await updateBudgetLimit(limitVal);
-    showToast('Budget Updated!', `Set trip budget limit to $${limitVal}.`, 'success', 'bi-wallet-fill');
+    showToast('Budget Updated!', `Set trip budget limit to ₹${limitVal.toLocaleString('en-IN')}.`, 'success', 'bi-wallet-fill');
     setShowBudgetModal(false);
   };
 
@@ -77,7 +77,7 @@ function BudgetTracker() {
         
         <div className="d-flex align-items-center gap-2">
           <Badge bg={budgetLimit > 0 ? 'coral' : 'secondary'} className="px-3 py-2 fs-6">
-            {budgetLimit > 0 ? `Budget: $${budgetLimit}` : 'Budget: Not Set'}
+            {budgetLimit > 0 ? `Budget: ₹${budgetLimit.toLocaleString('en-IN')}` : 'Budget: Not Set'}
           </Badge>
           <Button 
             variant="outline-light" 
@@ -97,9 +97,9 @@ function BudgetTracker() {
         {/* Progress Bar & Budget Overview */}
         <div className="mb-4">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <strong className="text-dark">Total Spending: ${totalSpent}</strong>
+            <strong className="text-dark">Total Spending: ₹{totalSpent.toLocaleString('en-IN')}</strong>
             <span className="small text-muted">
-              {budgetLimit > 0 ? `${percentUsed}% of $${budgetLimit} limit` : 'No budget limit set'}
+              {budgetLimit > 0 ? `${percentUsed}% of ₹${budgetLimit.toLocaleString('en-IN')} limit` : 'No budget limit set'}
             </span>
           </div>
           {budgetLimit > 0 ? (
@@ -134,7 +134,7 @@ function BudgetTracker() {
             <div className="col-md-3">
               <Form.Control
                 type="number"
-                placeholder="Amount ($)"
+                placeholder="Amount (₹)"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
@@ -188,7 +188,7 @@ function BudgetTracker() {
                   </td>
                   <td className="small text-muted">{exp.payer || user?.name || 'You'}</td>
                   <td className="small text-muted">{exp.date || 'Today'}</td>
-                  <td className="fw-bold text-coral">${exp.amount}</td>
+                  <td className="fw-bold text-coral">₹{Number(exp.amount || 0).toLocaleString('en-IN')}</td>
                   <td className="text-end">
                     <Button 
                       variant="link" 
@@ -216,10 +216,10 @@ function BudgetTracker() {
         <Modal.Body>
           <Form onSubmit={handleSaveBudget}>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold small">Budget Limit ($)</Form.Label>
+              <Form.Label className="fw-bold small">Budget Limit (₹)</Form.Label>
               <Form.Control
                 type="number"
-                placeholder="Enter budget (e.g. 1500)"
+                placeholder="Enter budget (e.g. 15000)"
                 value={newBudgetLimit}
                 onChange={(e) => setNewBudgetLimit(e.target.value)}
                 required

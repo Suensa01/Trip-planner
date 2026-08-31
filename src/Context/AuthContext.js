@@ -4,51 +4,38 @@ import api from '../services/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('quest_user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-
+  // Start with no user logged in when the application starts
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Clear any previously persisted user credentials from localStorage on launch
   useEffect(() => {
-    const token = localStorage.getItem('quest_jwt_token');
-    if (token && !user) {
-      api.getProfile()
-        .then((res) => {
-          if (res.user) {
-            setUser(res.user);
-            localStorage.setItem('quest_user', JSON.stringify(res.user));
-          }
-        })
-        .catch(() => {
-          localStorage.removeItem('quest_jwt_token');
-          localStorage.removeItem('quest_user');
-          setUser(null);
-        });
-    }
-  }, [user]);
+    localStorage.removeItem('quest_user');
+    localStorage.removeItem('quest_jwt_token');
+  }, []);
 
   const login = async (email, password) => {
     setLoading(true);
     try {
       const res = await api.login(email, password);
       if (res.token && res.user) {
-        localStorage.setItem('quest_jwt_token', res.token);
-        localStorage.setItem('quest_user', JSON.stringify(res.user));
+        sessionStorage.setItem('quest_jwt_token', res.token);
+        sessionStorage.setItem('quest_user', JSON.stringify(res.user));
         setUser(res.user);
         return res.user;
       }
     } catch (err) {
       // Fallback demo login if backend server is not currently running
+      const cleanEmail = email ? email.trim().toLowerCase() : 'user@example.com';
+      const userHash = btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '');
       const demoUser = {
-        id: `usr-${Date.now()}`,
-        email,
-        name: email.split('@')[0],
-        role: email.includes('admin') ? 'ADMIN' : 'TRAVELER',
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=${email.includes('admin') ? 'dc3545' : '28a745'}&color=fff`
+        id: `usr-${userHash}`,
+        email: cleanEmail,
+        name: cleanEmail.split('@')[0],
+        role: cleanEmail.includes('admin') ? 'ADMIN' : 'TRAVELER',
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanEmail.split('@')[0])}&background=${cleanEmail.includes('admin') ? 'dc3545' : '28a745'}&color=fff`
       };
-      localStorage.setItem('quest_user', JSON.stringify(demoUser));
+      sessionStorage.setItem('quest_user', JSON.stringify(demoUser));
       setUser(demoUser);
       return demoUser;
     } finally {
@@ -61,20 +48,22 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.register(name, email, password, role);
       if (res.token && res.user) {
-        localStorage.setItem('quest_jwt_token', res.token);
-        localStorage.setItem('quest_user', JSON.stringify(res.user));
+        sessionStorage.setItem('quest_jwt_token', res.token);
+        sessionStorage.setItem('quest_user', JSON.stringify(res.user));
         setUser(res.user);
         return res.user;
       }
     } catch (err) {
+      const cleanEmail = email ? email.trim().toLowerCase() : 'user@example.com';
+      const userHash = btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '');
       const demoUser = {
-        id: `usr-${Date.now()}`,
-        name: name || email.split('@')[0],
-        email,
+        id: `usr-${userHash}`,
+        name: name || cleanEmail.split('@')[0],
+        email: cleanEmail,
         role: role.toUpperCase(),
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email.split('@')[0])}&background=${role === 'ADMIN' ? 'dc3545' : '28a745'}&color=fff`
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || cleanEmail.split('@')[0])}&background=${role === 'ADMIN' ? 'dc3545' : '28a745'}&color=fff`
       };
-      localStorage.setItem('quest_user', JSON.stringify(demoUser));
+      sessionStorage.setItem('quest_user', JSON.stringify(demoUser));
       setUser(demoUser);
       return demoUser;
     } finally {
@@ -86,6 +75,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('quest_user');
     localStorage.removeItem('quest_jwt_token');
+    sessionStorage.removeItem('quest_user');
+    sessionStorage.removeItem('quest_jwt_token');
   };
 
   const isAdmin = user?.role === 'ADMIN';

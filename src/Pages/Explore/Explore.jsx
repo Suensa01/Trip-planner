@@ -10,12 +10,12 @@ import { useTrip } from '../../Context/TripContext';
 import './Explore.css';
 
 const categoryItems = [
-  { id: 'cat-1', title: 'The Colosseum & Forum', category: 'Museums & Ruins', city: 'Rome', rating: '4.9', price: '$65', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
-  { id: 'cat-2', title: 'Louvre Art Museum', category: 'Museums & Ruins', city: 'Paris', rating: '4.8', price: '$25', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80' },
-  { id: 'cat-3', title: 'Trastevere Food & Wine Walk', category: 'Dining & Drinks', city: 'Rome', rating: '4.9', price: '$55', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' },
-  { id: 'cat-4', title: 'Bagan Sunset Ballooning', category: 'Adventure & Parks', city: 'Bagan', rating: '5.0', price: '$220', image: 'https://images.unsplash.com/photo-1508672019048-805479767513?auto=format&fit=crop&w=600&q=80' },
-  { id: 'cat-5', title: 'Eiffel Tower Night Lights Tour', category: 'Nightlife & Views', city: 'Paris', rating: '4.9', price: '$40', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
-  { id: 'cat-6', title: 'Amber Fort Elephant Sanctuary', category: 'Adventure & Parks', city: 'Jaipur', rating: '4.7', price: '$35', image: 'https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?auto=format&fit=crop&w=600&q=80' }
+  { id: 'cat-1', title: 'The Colosseum & Forum', category: 'Museums & Ruins', city: 'Rome', rating: '4.9', price: '₹5,500', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+  { id: 'cat-2', title: 'Louvre Art Museum', category: 'Museums & Ruins', city: 'Paris', rating: '4.8', price: '₹2,100', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'cat-3', title: 'Trastevere Food & Wine Walk', category: 'Dining & Drinks', city: 'Rome', rating: '4.9', price: '₹4,500', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' },
+  { id: 'cat-4', title: 'Bagan Sunset Ballooning', category: 'Adventure & Parks', city: 'Bagan', rating: '5.0', price: '₹18,500', image: 'https://images.unsplash.com/photo-1508672019048-805479767513?auto=format&fit=crop&w=600&q=80' },
+  { id: 'cat-5', title: 'Eiffel Tower Night Lights Tour', category: 'Nightlife & Views', city: 'Paris', rating: '4.9', price: '₹3,400', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
+  { id: 'cat-6', title: 'Amber Fort Elephant Sanctuary', category: 'Adventure & Parks', city: 'Jaipur', rating: '4.7', price: '₹2,800', image: 'https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?auto=format&fit=crop&w=600&q=80' }
 ];
 
 function Explore() {
@@ -35,7 +35,7 @@ function Explore() {
       type: 'activity',
       time: '02:00 PM',
       location: `${place.city} Center`,
-      price: parseInt(place.price.replace('$', '')) || 25,
+      price: parseInt(place.price.replace(/[^0-9]/g, '')) || 2500,
       notes: `Added from Discovery Engine (${place.rating} ★)`
     });
     alert(`✓ Added "${place.title}" to Day 1 of your Active Itinerary!`);
@@ -96,7 +96,7 @@ function Explore() {
               <div key={place.id} className="col-md-6 col-lg-4">
                 <Card className="card-trippoo shadow-sm border-0 rounded-4 overflow-hidden h-100">
                   <div className="position-relative">
-                    <Card.Img variant="top" src={place.image} style={{ height: '180px', objectFit: 'cover' }} />
+                    <Card.Img variant="top" src={place.image} loading="lazy" decoding="async" style={{ height: '180px', objectFit: 'cover' }} />
                     <Badge bg="light" text="dark" className="position-absolute top-0 end-0 m-2 fw-bold shadow-sm">
                       <i className="bi bi-star-fill text-warning me-1"></i>{place.rating}
                     </Badge>

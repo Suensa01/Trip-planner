@@ -18,7 +18,7 @@ function ProfilePage() {
 
   const [dietary, setDietary] = useState('Vegetarian');
   const [seat, setSeat] = useState('Window');
-  const [currency, setCurrency] = useState('USD ($)');
+  const [currency, setCurrency] = useState('INR (₹)');
   const [savedSuccess, setSavedSuccess] = useState('');
   const [copiedShare, setCopiedShare] = useState(false);
 
@@ -29,14 +29,17 @@ function ProfilePage() {
     setTimeout(() => setSavedSuccess(''), 3000);
   };
 
-  const shareText = `Check out my trip itinerary to ${activeTrip.destination}: ${activeTrip.title} on Quest Travel! https://quest-travel.app/trip/${activeTrip.id}`;
+  const tripDestination = activeTrip?.destination || 'Custom Destination';
+  const tripTitle = activeTrip?.title || 'My Travel Plan';
+  const tripId = activeTrip?.id || 'demo-trip';
+  const shareText = `Check out my trip itinerary to ${tripDestination}: ${tripTitle} on Quest Travel! https://quest-travel.app/trip/${tripId}`;
 
   const handleWhatsAppShare = () => {
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
   };
 
   const handleEmailShare = () => {
-    window.location.href = `mailto:?subject=${encodeURIComponent(activeTrip.title)}&body=${encodeURIComponent(shareText)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(tripTitle)}&body=${encodeURIComponent(shareText)}`;
   };
 
   const handleCopyShare = () => {
@@ -101,13 +104,13 @@ function ProfilePage() {
                   </Form.Group>
 
                   <Form.Group className="mb-4">
-                    <Form.Label className="small fw-bold">Home Display Currency</Form.Label>
+                    <Form.Label className="small fw-bold">Platform Display Currency</Form.Label>
                     <Form.Select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                      <option value="USD ($)">USD ($) - US Dollar</option>
-                      <option value="EUR (€)">EUR (€) - Euro</option>
-                      <option value="INR (₹)">INR (₹) - Indian Rupee</option>
-                      <option value="GBP (£)">GBP (£) - British Pound</option>
+                      <option value="INR (₹)">INR (₹) - Indian Rupee (Unified Standard Currency)</option>
                     </Form.Select>
+                    <Form.Text className="text-muted">
+                      All package pricing and trip financials are calculated in unified ₹ INR.
+                    </Form.Text>
                   </Form.Group>
 
                   <Button variant="success" type="submit" className="w-100 fw-bold">
@@ -131,7 +134,7 @@ function ProfilePage() {
                   <div className="bg-light p-3 rounded mb-4 border">
                     <label className="fw-bold small mb-1">Public Shareable Link</label>
                     <div className="d-flex gap-2">
-                      <Form.Control type="text" readOnly value={`https://quest-travel.app/trip/${activeTrip.id}`} />
+                      <Form.Control type="text" readOnly value={`https://quest-travel.app/trip/${tripId}`} />
                       <Button variant={copiedShare ? 'success' : 'dark'} onClick={handleCopyShare} className="fw-bold text-nowrap">
                         {copiedShare ? '✓ Copied' : 'Copy'}
                       </Button>

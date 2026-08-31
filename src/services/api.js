@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
  * Fetch wrapper attaching JWT Authorization header automatically
  */
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('quest_jwt_token');
+  const token = sessionStorage.getItem('quest_jwt_token') || localStorage.getItem('quest_jwt_token');
 
   const headers = {
     'Content-Type': 'application/json',

@@ -141,7 +141,7 @@ function PlannerTimeline({ selectedDay, setSelectedDay }) {
 
                 <div className="d-flex justify-content-between align-items-center pt-2 border-top">
                   <span className="small text-muted">Estimated Cost:</span>
-                  <span className="fw-bold text-coral fs-6">${item.price}</span>
+                  <span className="fw-bold text-coral fs-6">₹{Number(item.price || 0).toLocaleString('en-IN')}</span>
                 </div>
               </Card.Body>
             </Card>
@@ -218,10 +218,10 @@ function PlannerTimeline({ selectedDay, setSelectedDay }) {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold">Estimated Cost ($ per person)</Form.Label>
+              <Form.Label className="small fw-bold">Estimated Cost (₹ per person)</Form.Label>
               <Form.Control 
                 type="number" 
-                placeholder="e.g. 45" 
+                placeholder="e.g. 2500" 
                 value={price} 
                 onChange={(e) => setPrice(e.target.value)} 
               />

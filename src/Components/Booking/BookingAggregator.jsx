@@ -9,20 +9,20 @@ import { useTrip } from '../../Context/TripContext';
 import { useToast } from '../../Context/ToastContext';
 
 const flightMockResults = [
-  { id: 'fl-1', airline: 'Emirates Airways', flightNo: 'EK-204', departure: '08:30 AM', arrival: '01:45 PM', duration: '5h 15m', stops: 'Direct', price: '$480', cabin: 'Economy' },
-  { id: 'fl-2', airline: 'British Airways', flightNo: 'BA-117', departure: '11:15 AM', arrival: '04:30 PM', duration: '5h 15m', stops: 'Direct', price: '$520', cabin: 'Premium Economy' },
-  { id: 'fl-3', airline: 'Lufthansa', flightNo: 'LH-402', departure: '02:00 PM', arrival: '08:10 PM', duration: '6h 10m', stops: '1 Stop (FRA)', price: '$390', cabin: 'Economy' }
+  { id: 'fl-1', airline: 'Emirates Airways', flightNo: 'EK-204', departure: '08:30 AM', arrival: '01:45 PM', duration: '5h 15m', stops: 'Direct', price: '₹38,500', cabin: 'Economy' },
+  { id: 'fl-2', airline: 'British Airways', flightNo: 'BA-117', departure: '11:15 AM', arrival: '04:30 PM', duration: '5h 15m', stops: 'Direct', price: '₹42,000', cabin: 'Premium Economy' },
+  { id: 'fl-3', airline: 'Lufthansa', flightNo: 'LH-402', departure: '02:00 PM', arrival: '08:10 PM', duration: '6h 10m', stops: '1 Stop (FRA)', price: '₹31,500', cabin: 'Economy' }
 ];
 
 const hotelMockResults = [
-  { id: 'ht-1', name: 'Hotel Artemide Luxury Suites', stars: '5 ★★★★★', location: 'Rome City Center', price: '$180 / night', rating: '9.4 Exceptional', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80' },
-  { id: 'ht-2', name: 'Grand Palace Hotel', stars: '4 ★★★★', location: 'Trastevere, Rome', price: '$135 / night', rating: '9.0 Superb', image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&q=80' },
-  { id: 'ht-3', name: 'Villa Borghese Garden Resort', stars: '5 ★★★★★', location: 'Near Borghese Gardens', price: '$240 / night', rating: '9.7 Outstanding', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80' }
+  { id: 'ht-1', name: 'Hotel Artemide Luxury Suites', stars: '5 ★★★★★', location: 'Rome City Center', price: '₹14,500 / night', rating: '9.4 Exceptional', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80' },
+  { id: 'ht-2', name: 'Grand Palace Hotel', stars: '4 ★★★★', location: 'Trastevere, Rome', price: '₹10,800 / night', rating: '9.0 Superb', image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&q=80' },
+  { id: 'ht-3', name: 'Villa Borghese Garden Resort', stars: '5 ★★★★★', location: 'Near Borghese Gardens', price: '₹19,200 / night', rating: '9.7 Outstanding', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80' }
 ];
 
 const tourMockResults = [
-  { id: 'tr-1', name: 'Vatican Museums & Sistine Chapel VIP Fast-Track', provider: 'GetYourGuide Partner', duration: '3.5 Hours', price: '$75', rating: '4.9 ★ (1,420 reviews)', image: 'https://images.unsplash.com/photo-1548625361-18da90e930e4?auto=format&fit=crop&w=600&q=80' },
-  { id: 'tr-2', name: 'Colosseum Underground & Arena Floor Tour', provider: 'Viator Premier', duration: '2.5 Hours', price: '$68', rating: '4.8 ★ (2,100 reviews)', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' }
+  { id: 'tr-1', name: 'Vatican Museums & Sistine Chapel VIP Fast-Track', provider: 'GetYourGuide Partner', duration: '3.5 Hours', price: '₹6,200', rating: '4.9 ★ (1,420 reviews)', image: 'https://images.unsplash.com/photo-1548625361-18da90e930e4?auto=format&fit=crop&w=600&q=80' },
+  { id: 'tr-2', name: 'Colosseum Underground & Arena Floor Tour', provider: 'Viator Premier', duration: '2.5 Hours', price: '₹5,600', rating: '4.8 ★ (2,100 reviews)', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' }
 ];
 
 function BookingAggregator() {
@@ -31,7 +31,7 @@ function BookingAggregator() {
   const { showToast } = useToast();
 
   const handleBookFlight = (flight) => {
-    const numericPrice = parseInt(flight.price.replace('$', '')) || 480;
+    const numericPrice = parseInt(flight.price.replace(/[^0-9]/g, '')) || 38500;
     const ticketCode = `AIR-${flight.flightNo}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     addActivity(1, {
@@ -63,7 +63,7 @@ function BookingAggregator() {
   };
 
   const handleBookHotel = (hotel) => {
-    const numericPrice = parseInt(hotel.price.replace(/[^0-9]/g, '')) || 180;
+    const numericPrice = parseInt(hotel.price.replace(/[^0-9]/g, '')) || 14500;
     const hotelCode = `HTL-${Math.floor(10000 + Math.random() * 90000)}`;
 
     addActivity(1, {
@@ -95,7 +95,7 @@ function BookingAggregator() {
   };
 
   const handleBookTour = (tour) => {
-    const numericPrice = parseInt(tour.price.replace('$', '')) || 65;
+    const numericPrice = parseInt(tour.price.replace(/[^0-9]/g, '')) || 6200;
     const tourCode = `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
 
     addActivity(2, {

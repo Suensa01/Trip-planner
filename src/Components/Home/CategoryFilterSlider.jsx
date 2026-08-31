@@ -5,6 +5,7 @@ import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import { useWishlist } from '../../Context/WishlistContext';
+import { calculateDynamicPrice, formatCurrency } from '../../utils/pricing';
 import './CategoryFilterSlider.css';
 
 const destinationCardsData = [
@@ -16,7 +17,8 @@ const destinationCardsData = [
     rating: '4.9',
     reviewsCount: '3.5k',
     duration: '4 Days 3 Nights',
-    itemPrice: '$840',
+    nights: 3,
+    baseNightlyRate: 130,
     itemImage: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -26,8 +28,9 @@ const destinationCardsData = [
     category: 'Solo',
     rating: '4.9',
     reviewsCount: '3.5k',
-    duration: '3 Days 4 Nights',
-    itemPrice: '$615',
+    duration: '5 Days 4 Nights',
+    nights: 4,
+    baseNightlyRate: 110,
     itemImage: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -38,7 +41,8 @@ const destinationCardsData = [
     rating: '4.9',
     reviewsCount: '3.5k',
     duration: '5 Days 4 Nights',
-    itemPrice: '$790',
+    nights: 4,
+    baseNightlyRate: 125,
     itemImage: 'https://images.unsplash.com/photo-1555990537-88775f0a20db?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -49,7 +53,8 @@ const destinationCardsData = [
     rating: '4.9',
     reviewsCount: '3.2k',
     duration: '3 Days 2 Nights',
-    itemPrice: '$480',
+    nights: 2,
+    baseNightlyRate: 140,
     itemImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'
   }
 ];
@@ -94,18 +99,28 @@ function CategoryFilterSlider({ onSelectPackage }) {
         <Row className="g-4 text-start">
           {filteredCards.map((item) => {
             const isSaved = isWishlisted(item);
+            // Dynamic price calculation: baseRate * nights * 2 guests * vibeMultiplier
+            const dynamicPriceObj = calculateDynamicPrice(item.baseNightlyRate, item.nights, 2, item.category);
+            const calculatedPrice = formatCurrency(dynamicPriceObj.total);
+
+            const enrichedItem = {
+              ...item,
+              itemPrice: calculatedPrice,
+              itemNights: `${item.nights} nights`
+            };
+
             return (
               <Col key={item.id} lg={3} md={6}>
                 <Card className="destination-portrait-card">
                   <div className="destination-img-wrap">
-                    <img src={item.itemImage} alt={item.itemTitle} />
+                    <img src={item.itemImage} alt={item.itemTitle} loading="lazy" decoding="async" />
                     <div className="position-absolute top-0 end-0 m-3">
                       <button
                         type="button"
                         className={`btn btn-sm btn-light rounded-circle shadow-sm ${isSaved ? 'text-danger' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleWishlist(item);
+                          toggleWishlist(enrichedItem);
                         }}
                         title={isSaved ? 'Remove Wishlist' : 'Add Wishlist'}
                       >
@@ -122,9 +137,13 @@ function CategoryFilterSlider({ onSelectPackage }) {
                     </div>
 
                     <h5 className="fw-bold mb-1 text-dark">{item.itemTitle}</h5>
-                    <p className="small text-muted mb-2">
+                    <p className="small text-muted mb-1">
                       <i className="bi bi-geo-alt-fill text-secondary me-1"></i>{item.country}
                     </p>
+                    <div className="mb-2">
+                      <span className="fw-bold text-success fs-6">{calculatedPrice}</span>
+                      <small className="text-muted ms-1">/ 2 Guests</small>
+                    </div>
 
                     <div className="d-flex justify-content-between align-items-center pt-2 border-top">
                       <span className="small text-muted">{item.duration}</span>
@@ -132,7 +151,7 @@ function CategoryFilterSlider({ onSelectPackage }) {
                         variant="coral"
                         size="sm"
                         className="btn-coral px-3"
-                        onClick={() => onSelectPackage && onSelectPackage(item)}
+                        onClick={() => onSelectPackage && onSelectPackage(enrichedItem)}
                       >
                         Explore
                       </Button>
